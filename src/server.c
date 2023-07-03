@@ -17,93 +17,112 @@ int createResponseMessage(char *, int, char *, char *, unsigned int);
 int sendResponseMessage(int, char *, unsigned int);
 unsigned int getFileSize(const char *);
 
-// NOTE: ファイルサイズを取得する
+// NOTE: `strcmp` 二つの文字列を比較。一致する場合は0を、一致しない場合は0以外の値を返す
+// NOTE: `strtok` 文字列を特定の区切り文字に基づいてトークン(部分文字列)に分割　第一引数にNULLを渡すことで、前回区切った文字列の次のトークンを取得
+/**
+ * ファイルサイズの取得
+ * @param path ファイルパスを指す文字列
+ * @return pathを元に読み込んだファイルのサイズ
+ */
 unsigned int getFileSize(const char *path)
 {
     int size, read_size;
     char read_buf[SIZE];
     FILE *f;
 
+    // NOTE: ファイルを開く
     f = fopen(path, "rb");
     if (f == NULL)
+    {
         return 0;
+    }
 
     size = 0;
     do
     {
+        // NOTE: ファイルから指定した数・サイズのデータを読み込む
         read_size = fread(read_buf, 1, SIZE, f);
         size += read_size;
     } while (read_size != 0);
 
     fclose(f);
+
     return size;
 }
 
 /**
  * リクエストメッセージを受信する
- * @param sock: 接続済みのソケット
- * @param request_message: リクエストメッセージを格納するバッファへのアドレス
- * @param buf_size: リクエストメッセージを格納するバッファのサイズ
- * @return 受信したデータのサイズ(バイト長)
+ * @param sock 接続済みのソケット
+ * @param request_message リクエストメッセージを格納するバッファへのアドレス
+ * @param buf_size リクエストメッセージを格納するバッファのサイズ
+ * @return 実際に接続先から受信したデータのバイト数
  */
 int recvRequestMessage(int sock, char *request_message, unsigned int buf_size)
 {
     // NOTE: 受信時、送信時の動作の詳細設定: 今回は特別なフラグを設定しないので`0`とする
-    int RECT_FLAG = 0, SEND_FLAG = 0;
+    int RECV_FLAG = 0;
     int recv_size;
 
-    recv_size = recv(sock, request_message, buf_size, RECT_FLAG);
+    /**
+     *  @param sockfd 接続済みのソケット
+     *  @param request_message 受信データを格納するバッファのアドレス
+     *  @param buf_size bufのサイズ(バイト数)
+     *  @param RECV_FLAG 受信時の動作の詳細設定
+     *  @return 実際に接続先から受信したデータのバイト数
+     */
+    recv_size = recv(sock, request_message, buf_size, RECV_FLAG);
 
     return recv_size;
 }
 
 /**
  * リクエストメッセージを解析する
- * @param method: メソッドを格納するバッファへのアドレス
- * @param target: リクエストターゲットを格納するバッファへのアドレス
- * @param request_message: 解析するリクエストメッセージが格納されたバッファへのアドレス
+ * @param method メソッドを格納するバッファへのアドレス
+ * @param req_target リクエストターゲットを格納するバッファへのアドレス
+ * @param request_message 解析するリクエストメッセージが格納されたバッファへのアドレス
  * @return 成功したかのフラグ 成功時に0、エラー時に-1を返す
  */
-int parseRequestMessage(char *method, char *target, char *request_message)
+int parseRequestMessage(char *method, char *req_target, char *request_message)
 {
     char *line;
     char *tmp_method;
     char *tmp_target;
 
-    // NOTE: リクエストメッセージの1行目の未取得
+    // NOTE: リクエストメッセージの1行目を取得
     line = strtok(request_message, "\n");
-
-    // NOTE: " "までの文字を取得しmethodにコピー
+    // NOTE: " "までの文字を取得
     tmp_method = strtok(line, " ");
     if (tmp_method == NULL)
     {
         printf("get method error\n");
         return -1;
     }
+    // NOTE: tmp_method を methodにコピー
     strcpy(method, tmp_method);
 
-    // NOTE: 次の" "までの文字列を取得し、targetにコピー
+    // NOTE: 次の" "までの文字列を取得
     tmp_target = strtok(NULL, " ");
     if (tmp_target == NULL)
     {
         printf("get target error\n");
         return -1;
     }
+    // NOTE: tmp_target を targetにコピー
+    strcpy(req_target, tmp_target);
 
-    strcpy(target, tmp_target);
     return 0;
 }
 
 /**
  * リクエストに対する処理を行う(今回はGETのみ)
- * @param body: ボディを格納するバッファへのアドレス
- * @param file_path: リクエストターゲットに対するファイルへのパス
+ * @param body ボディを格納するバッファへのアドレス
+ * @param file_path リクエストターゲットに対するファイルへのパス
  * @return ステータスコード (ファイルがない場合は404)
  */
 int getProcessing(char *body, char *file_path)
 {
-    FILE *f;
-    int file_size;
+    FILE *file;
+    int file_size, DATA_BLOCK_SIZE_FOR_READ = 1;
 
     // NOTE: ファイルサイズを取得
     file_size = getFileSize(file_path);
@@ -114,29 +133,34 @@ int getProcessing(char *body, char *file_path)
         return 404;
     }
 
-    // NOTE: ファイルを読み込んでボディとする
-    f = fopen(file_path, "r");
-    fread(body, 1, file_size, f);
-    fclose(f);
+    // NOTE: ファイルを読み込み
+    file = fopen(file_path, "r");
+    if (file == NULL)
+    {
+        printf("Error opening file: %s\n", file_path);
+        return 404;
+    }
+    // NOTE: ファイルを読み込んで、bodyに格納
+    fread(body, DATA_BLOCK_SIZE_FOR_READ, file_size, file);
+    fclose(file);
 
     return 200;
 }
 
 /**
  * レスポンスメッセージを作成する
- * @param response_message: レスポンスメッセージを格納するバッファへのアドレス
- * @param status: ステータスコード
- * @param header: ヘッダーフィールドを格納したバッファへのアドレス
- * @param body: ボディを格納したバッファへのアドレス
- * @param body_size: ボディのサイズ
+ * @param response_message レスポンスメッセージを格納するバッファへのアドレス
+ * @param status ステータスコード
+ * @param header ヘッダーフィールドを格納したバッファへのアドレス
+ * @param body ボディを格納したバッファへのアドレス
+ * @param body_size ボディのサイズ
  * @return レスポンスメッセージのデータサイズ(バイト長)
  */
 int createResponseMessage(char *response_message, int status, char *header, char *body, unsigned int body_size)
 {
     unsigned int no_body_len;
     unsigned int body_len;
-
-    response_message[0] = "\0";
+    response_message[0] = '\0';
 
     if (status == 200)
     {
@@ -180,11 +204,23 @@ int sendResponseMessage(int sock, char *response_message, unsigned int message_s
     int SEND_FLAG = 0;
     int send_size;
 
+    /**
+     *  @param sock 接続済みのソケット
+     *  @param response_message 送信するデータへのポインタ
+     *  @param message_size 送信するデータのサイズ(バイト数)
+     *  @param SEND_FLAG 送信時の動作の詳細設定
+     *  @return 実際に接続先に送信したデータのバイト数
+     */
     send_size = send(sock, response_message, message_size, SEND_FLAG);
 
     return send_size;
 }
 
+/**
+ * 受信した文字列を表示
+ * @param message メッセージを格納するバッファへのアドレス
+ * @param size メッセージのバイト数
+ */
 void showMessage(char *message, unsigned int size)
 {
     unsigned int i;
@@ -231,7 +267,6 @@ int httpServer(int sock)
             break;
         }
 
-        // NOTE: 受信した文字列を表示
         showMessage(request_message, request_size);
 
         // NOTE: 受信した文字列を解析してメソッドやリクエストターゲットを取得
@@ -284,6 +319,12 @@ int main(void)
     struct sockaddr_in a_addr;
 
     // NOTE: ソケットを作成
+    /**
+     *  @param AF_INET プロトコルファミリー(アドレスファミリー)を指定
+     *  @param SOCK_STREAM　ソケットのタイプを指定
+     *  @param DEFAULT_PROTOCOL　使用するプロトコルを指定
+     *  @return 成功したかのフラグ 成功時に0、エラー時に-1を返す
+     */
     w_addr = socket(AF_INET, SOCK_STREAM, DEFAULT_PROTOCOL);
     if (w_addr == -1)
     {
