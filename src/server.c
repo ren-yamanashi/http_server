@@ -134,7 +134,7 @@ int getProcessing(char *body, char *file_path)
     }
 
     // NOTE: ファイルを読み込み
-    file = fopen(file_path, "r");
+    file = fopen(file_path, "rb");
     if (file == NULL)
     {
         printf("Error opening file: %s\n", file_path);
@@ -160,8 +160,11 @@ int createResponseMessage(char *response_message, int status, char *header, char
 {
     unsigned int no_body_len;
     unsigned int body_len;
+    char content_length[50];
     response_message[0] = '\0';
 
+    sprintf(content_length, "Content-Length: %u\r\n", body_size);
+    strcat(header, content_length);
     if (status == 200)
     {
         // NOTE: レスポンス行とヘッダーフィールドの文字列を作成
@@ -205,6 +208,7 @@ int sendResponseMessage(int sock, char *response_message, unsigned int message_s
     int send_size;
 
     /**
+     *  データを送信する
      *  @param sock 接続済みのソケット
      *  @param response_message 送信するデータへのポインタ
      *  @param message_size 送信するデータのサイズ(バイト数)
@@ -318,8 +322,8 @@ int main(void)
     int w_addr, c_sock, DEFAULT_PROTOCOL = 0;
     struct sockaddr_in a_addr;
 
-    // NOTE: ソケットを作成
     /**
+     *  ソケットを作成
      *  @param AF_INET プロトコルファミリー(アドレスファミリー)を指定
      *  @param SOCK_STREAM　ソケットのタイプを指定
      *  @param DEFAULT_PROTOCOL　使用するプロトコルを指定
@@ -343,10 +347,10 @@ int main(void)
     // NOTE: 使用するIPアドレスを指定
     a_addr.sin_addr.s_addr = inet_addr(SERVER_ADDR);
 
-    // NOTE: ソケットを特定のネットワークアドレス（IPアドレスとポート番号の組）に紐付ける
     /**
+     *  ソケットを特定のネットワークアドレス（IPアドレスとポート番号の組）に紐付ける
      *  @param w_addr ソケット
-     *  @param `(const struct sockaddr *)&a_addr`　ソケットに割り当てるアドレスやポート番号の情報 sockaddr_in構造体のインスタンスで、IPアドレスとポート番号を含む
+     *  @param `(const struct sockaddr *)&a_addr` ソケットに割り当てるアドレスやポート番号の情報 sockaddr_in構造体のインスタンスで、IPアドレスとポート番号を含む
      *  @param `sizeof(a_addr)` addrのサイズ(バイト数)
      *  @return 成功したかのフラグ 成功時に0、エラー時に-1を返す
      */
@@ -357,7 +361,12 @@ int main(void)
         return -1;
     }
 
-    // NOTE: ソケットを接続待ちに設定
+    /**
+     *  ソケットを接続待ちに設定
+     *  @param sockfd 接続を待つソケット
+     *  @param backlog 接続要求を保持する数
+     *  @return 成功したかのフラグ 成功時に0、エラー時に-1を返す
+     */
     if (listen(w_addr, 3) == -1)
     {
         printf("listen error\n");
@@ -367,8 +376,15 @@ int main(void)
 
     while (1)
     {
-        // NOTE: 接続を受け付ける
         printf("Waiting connect...\n");
+
+        /**
+         *  接続を受け付ける
+         *  @param sockfd 接続待ちの状態になっているソケット
+         *  @param addr 接続先の情報へのポインタ
+         *  @param addrlen addrのサイズ(バイト数)へのポインタ
+         *  @return 接続が確立されたソケット
+         */
         c_sock = accept(w_addr, NULL, NULL);
         if (c_sock == -1)
         {
