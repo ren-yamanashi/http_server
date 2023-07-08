@@ -70,22 +70,27 @@ int httpServer(int sock, Route *route)
             break;
         }
 
-        // NOTE: requestMethodが受信可能なものか判別
-        if (checkRequestMethod(request.method) != 0)
+        // NOTE: routeで設定した情報と、リクエスト内容が一致していなければ404を返す
+        if (strcmp(request.method, route->method) != 0 || strcmp(request.target, route->path) != 0)
         {
             status = 404;
         }
         else
         {
-            if (strcmp(request.target, "/") == 0)
+            if (strcmp(route->sendType, "text/html") == 0)
             {
-                // NOTE: `/`が指定されたときは`/index.html`に置き換える
-                strcpy(request.target, "/index.html");
+                if (strcmp(request.target, "/") == 0)
+                {
+                    // NOTE: `/`が指定されたときは`/index.html`に置き換える
+                    strcpy(request.target, "/index.html");
+                }
+                else
+                {
+                    strcat(request.target, ".html");
+                }
             }
-            else
+            else if (strcmp(route->sendType, "text/plain") == 0)
             {
-                // NOTE: とりあえず、`~/hoge`リクエストに対して、`hoge.html`ファイルを返す
-                strcat(request.target, ".html");
             }
             status = processingRequest(body, &request.target[1]);
         }

@@ -16,6 +16,9 @@ int main(void)
     int waiting_sock_addr, connected_sock_addr, DEFAULT_PROTOCOL = 0;
     struct sockaddr_in sock_addr_info;
     Route route = {0};
+    route.method = "POST";
+    route.path = "/";
+    route.sendType = "text/html";
 
     // NOTE: ソケットを作成
     waiting_sock_addr = socket(AF_INET, SOCK_STREAM, DEFAULT_PROTOCOL);
