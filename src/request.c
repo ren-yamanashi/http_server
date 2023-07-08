@@ -1,6 +1,4 @@
-#include <sys/socket.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -131,8 +129,52 @@ int parseRequestMessage(char *request_message, HttpRequest *request)
     printf("Target: %s\r\n", request->target);
     printf("Http Version: %s\r\n", request->version);
     printf("Content-Type: %s\r\n", request->contentType);
-    printf("Body: %s\r\n", request->body);
+    printf("body: %s\r\n", request->body);
+
+    if (parseRequestBody(request) == -1)
+    {
+        printf("Failed to parse JSON\n");
+        return -1;
+    };
+
     return 0;
+}
+
+/**
+ * リクエストボディを解析
+ * jsonの場合は、objectに変換
+ * plainTextの場合は、何もしない
+ * @param request HttpRequest構造体のアドレス
+ * @return 成功した場合は0 それ以外は-1
+ *
+ */
+int parseRequestBody(HttpRequest *request)
+{
+
+    if (strcmp(request->contentType, "application/json") == 0)
+    {
+        int parsedCount = parseJson(request->body, request->parsedBody, sizeof(request->parsedBody) / sizeof(KeyValue));
+        if (parsedCount < 0)
+        {
+            return -1;
+        }
+
+        // NOTE: 解析した情報を出力
+        for (int i = 0; i < parsedCount; i++)
+        {
+            printf("Key: %s, Value: %s\n", request->parsedBody[i].key, request->parsedBody[i].value);
+        }
+
+        return 0;
+    }
+    else if (strcmp(request->contentType, "text/plain") == 0)
+    {
+        return 0;
+    }
+    else
+    {
+        return -1;
+    }
 }
 
 /**
