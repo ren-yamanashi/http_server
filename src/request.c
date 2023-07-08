@@ -9,18 +9,6 @@
 #include "io.h"
 
 /**
- * 一つの文字列から別の文字列へ指定された数の文字をコピーする
- * @param dest コピー先の文字列
- * @param src コピー元の文字列
- * @param n コピーする最大文字数
- * strncpy(char *dest, const char *src, size_t n);
- *
- * n文字をコピーした時点でソース文字列の終端に達していない場合、文字列には終端を意味するnull文字が追加されない。
- * なので、以下のようにして`\0`を追加する必要がある。
- * request->contentType[sizeof(request->contentType) - 1] = "\0";
- */
-
-/**
  * リクエストメソッドが受信可能なものか判別
  * @param req_method リクエストメソッド
  * @return 可能な場合は0それ以外は-1
@@ -137,6 +125,13 @@ int parseRequestMessage(char *request_message, HttpRequest *request)
     // NOTE: ボディの取得
     snprintf(request->body, sizeof(request->body), "%s", body_start);
 
+    // リクエストの情報を表示
+    printf("Parsed the request!!\n");
+    printf("Method: %s\r\n", request->method);
+    printf("Target: %s\r\n", request->target);
+    printf("Http Version: %s\r\n", request->version);
+    printf("Content-Type: %s\r\n", request->contentType);
+    printf("Body: %s\r\n", request->body);
     return 0;
 }
 
