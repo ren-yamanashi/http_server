@@ -131,8 +131,42 @@ int parseRequestMessage(char *request_message, HttpRequest *request)
     printf("Target: %s\r\n", request->target);
     printf("Http Version: %s\r\n", request->version);
     printf("Content-Type: %s\r\n", request->contentType);
-    printf("Body: %s\r\n", request->body);
+    printf("body: %s\r\n", request->body);
+
+    parseRequestBody(request);
+
     return 0;
+}
+
+/**
+ * リクエストボディを解析
+ * jsonの場合は、objectに変換
+ * plainTextの場合は、何もしない
+ * @param request HttpRequest構造体のアドレス
+ * @return 成功した場合は0 それ以外は-1
+ *
+ */
+int parseRequestBody(HttpRequest *request)
+{
+
+    if (strcmp(request->contentType, "application/json") == 0)
+    {
+        KeyValue keyValue[5];
+        parseJson(request->body, keyValue, 5);
+        for (int i = 0; i < 5 && keyValue[i].key[0] != '\0'; i++)
+        {
+            printf("Key: %s, Value: %s\n", keyValue[i].key, keyValue[i].value);
+        }
+        return 0;
+    }
+    else if (strcmp(request->contentType, "text/plain") == 0)
+    {
+        return 0;
+    }
+    else
+    {
+        return -1;
+    }
 }
 
 /**
