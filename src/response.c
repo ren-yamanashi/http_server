@@ -23,7 +23,7 @@ int createResponseMessage(char *response_message, int status, char *header, char
     char content_length[50];
     response_message[0] = '\0';
 
-    sprintf(content_length, "Content-Length: %u\r\nContent-Type: text/html\r\n", body_size);
+    sprintf(content_length, "Content-Length: %u\r\n", body_size);
     strcat(header, content_length);
     if (status == 200)
     {

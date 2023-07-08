@@ -76,9 +76,9 @@ int httpServer(int sock)
             printf("parseRequestMessage error\n");
             break;
         }
-
-        // NOTE: メソッドがGET以外はステータスコードを404にする
-        if (strcmp(method, "GET") != 0)
+        
+        // NOTE: requestMethodが受信可能なものか判別
+        if (checkRequestMethod(method) != 0)
         {
             status = 404;
         }
