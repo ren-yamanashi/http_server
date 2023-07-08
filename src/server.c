@@ -14,9 +14,6 @@
 #define SERVER_PORT 8080
 #define SIZE (5 * 1024)
 
-// NOTE: `strcmp` 二つの文字列を比較。一致する場合は0を、一致しない場合は0以外の値を返す
-// NOTE: `strtok` 文字列を特定の区切り文字に基づいてトークン(部分文字列)に分割　第一引数にNULLを渡すことで、前回区切った文字列の次のトークンを取得
-
 /**
  * 受信した文字列を表示
  * @param message メッセージを格納するバッファへのアドレス
@@ -25,7 +22,6 @@
 void showMessage(char *message, unsigned int size)
 {
     unsigned int i;
-    printf("Show Message\n\n");
 
     for (i = 0; i < size; i++)
     {
@@ -44,16 +40,14 @@ int httpServer(int sock)
     int request_size, response_size;
     char request_message[SIZE];
     char response_message[SIZE];
-    char method[SIZE];
-    char target[SIZE];
     char header_field[SIZE];
     char body[SIZE];
     int status;
     unsigned int file_size;
+    HttpRequest request;
 
     while (1)
     {
-        // NOTE: リクエストメッセージを受信
         request_size = recvRequestMessage(sock, request_message, SIZE);
         if (request_size == -1)
         {
@@ -68,36 +62,36 @@ int httpServer(int sock)
             break;
         }
 
+        printf("\nShow Request Message \n\n");
         showMessage(request_message, request_size);
 
-        // NOTE: 受信した文字列を解析してメソッドやリクエストターゲットを取得
-        if (parseRequestMessage(method, target, request_message) == -1)
+        if (parseRequestMessage(request_message, &request) == -1)
         {
             printf("parseRequestMessage error\n");
             break;
         }
 
-        // NOTE: メソッドがGET以外はステータスコードを404にする
-        if (strcmp(method, "GET") != 0)
+        // NOTE: requestMethodが受信可能なものか判別
+        if (checkRequestMethod(request.method) != 0)
         {
             status = 404;
         }
         else
         {
-            if (strcmp(target, "/") == 0)
+            if (strcmp(request.target, "/") == 0)
             {
                 // NOTE: `/`が指定されたときは`/index.html`に置き換える
-                strcpy(target, "/index.html");
+                strcpy(request.target, "/index.html");
             }
             else
             {
                 // NOTE: とりあえず、`~/hoge`リクエストに対して、`hoge.html`ファイルを返す
-                strcat(target, ".html");
+                strcat(request.target, ".html");
             }
-            status = processingRequest(body, &target[1]);
+            status = processingRequest(body, &request.target[1]);
         }
 
-        file_size = getFileSize(&target[1]);
+        file_size = getFileSize(&request.target[1]);
         response_size = createResponseMessage(response_message, status, header_field, body, file_size);
         if (response_size == -1)
         {
@@ -106,6 +100,7 @@ int httpServer(int sock)
         }
 
         // NOTE: 送信するメッセージを表示
+        printf("\nShow Response Message \n\n");
         showMessage(response_message, response_size);
 
         // NOTE: レスポンスメッセージを送信する
