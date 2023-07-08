@@ -67,6 +67,7 @@ int recvRequestMessage(int sock, char *request_message, unsigned int buf_size)
  */
 int parseRequestMessage(char *request_message, HttpRequest *request)
 {
+    char *body_part;
     char *line, *line_save;
     char *header, *header_save;
     char *header_value;
@@ -104,35 +105,28 @@ int parseRequestMessage(char *request_message, HttpRequest *request)
 
     while (line)
     {
-        printf("🚀 ~ file: request.c:107 ~ line: %s %d\n", line, isBodyStarted);
-        if (isBodyStarted)
+
+        header = strtok_r(line, ":", &header_save);
+        header_value = strtok_r(NULL, "", &header_save);
+        if (header && header_value && strcmp(header, "Content-Type") == 0)
         {
-            printf("🚀 ~ file: request.c:110 ~ line: %s\n", line);
-            // NOTE: ボディを取得
-            strncpy(request->body, line, sizeof(request->body) - 1);
-            request->body[sizeof(request->body) - 1] = '\0';
-        }
-        else if (strcmp(line, "") == 0 || strcmp(line, "\r") == 0)
-        {
-            // NOTE: 空行を検出
-            isBodyStarted = 1;
-        }
-        else
-        {
-            header = strtok_r(line, ":", &header_save);
-            header_value = strtok_r(NULL, "", &header_save);
-            if (header && header_value && strcmp(header, "Content-Type") == 0)
-            {
-                // NOTE: コンテンツタイプを取得
-                header_value++;
-                strncpy(request->contentType, header_value, sizeof(request->contentType) - 1);
-                request->contentType[sizeof(request->contentType) - 1] = '\0';
-            }
+            // NOTE: コンテンツタイプを取得
+            header_value++;
+            strncpy(request->contentType, header_value, sizeof(request->contentType) - 1);
+            request->contentType[sizeof(request->contentType) - 1] = '\0';
         }
 
-        // 行の取得を繰り返す
+        // NOTE: 行の取得を繰り返す
         line = strtok_r(NULL, "\r\n", &line_save);
     }
+
+    // NOTE: ボディの取得
+    if (body_part != NULL)
+    {
+        strncpy(request->body, body_part, sizeof(request->body) - 1);
+        request->body[sizeof(request->body) - 1] = '\0';
+    }
+
     return 0;
 }
 
