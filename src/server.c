@@ -44,11 +44,10 @@ int httpServer(int sock)
     int request_size, response_size;
     char request_message[SIZE];
     char response_message[SIZE];
-    char method[SIZE];
-    char target[SIZE];
     char header_field[SIZE];
     char body[SIZE];
     int status;
+    HttpRequest request = {0};
     unsigned int file_size;
 
     while (1)
@@ -71,39 +70,42 @@ int httpServer(int sock)
         showMessage(request_message, request_size);
 
         // NOTE: 受信した文字列を解析してメソッドやリクエストターゲットを取得
-        if (parseRequestMessage(method, target, request_message) == -1)
+        if (parseRequestMessage(request_message, &request) == -1)
         {
             printf("parseRequestMessage error\n");
             break;
         }
-        
+
         // NOTE: requestMethodが受信可能なものか判別
-        if (checkRequestMethod(method) != 0)
+        if (checkRequestMethod(request.method) != 0)
         {
             status = 404;
         }
         else
         {
-            if (strcmp(target, "/") == 0)
+            if (strcmp(request.target, "/") == 0)
             {
                 // NOTE: `/`が指定されたときは`/index.html`に置き換える
-                strcpy(target, "/index.html");
+                strcpy(request.target, "/index.html");
             }
             else
             {
                 // NOTE: とりあえず、`~/hoge`リクエストに対して、`hoge.html`ファイルを返す
-                strcat(target, ".html");
+                strcat(request.target, ".html");
             }
-            status = processingRequest(body, &target[1]);
+            status = processingRequest(body, &request.target[1]);
         }
 
-        file_size = getFileSize(&target[1]);
+        file_size = getFileSize(&request.target[1]);
         response_size = createResponseMessage(response_message, status, header_field, body, file_size);
         if (response_size == -1)
         {
             printf("createResponseMessage error\n");
             break;
         }
+
+        printf("Content-Type: %s\n", request.contentType);
+        printf("Body: %s\n", request.body);
 
         // NOTE: 送信するメッセージを表示
         showMessage(response_message, response_size);
