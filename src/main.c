@@ -19,6 +19,7 @@ int main(void)
     route.method = "POST";
     route.path = "/";
     route.sendType = "text/html";
+    route.filePath = "/index.html";
 
     // NOTE: ソケットを作成
     waiting_sock_addr = socket(AF_INET, SOCK_STREAM, DEFAULT_PROTOCOL);

@@ -79,23 +79,18 @@ int httpServer(int sock, Route *route)
         {
             if (strcmp(route->sendType, "text/html") == 0)
             {
-                if (strcmp(request.target, "/") == 0)
-                {
-                    // NOTE: `/`が指定されたときは`/index.html`に置き換える
-                    strcpy(request.target, "/index.html");
-                }
-                else
-                {
-                    strcat(request.target, ".html");
-                }
+                status = processingRequest(body, &route->filePath[1]);
             }
             else if (strcmp(route->sendType, "text/plain") == 0)
             {
             }
-            status = processingRequest(body, &request.target[1]);
+            else
+            {
+                status = 404;
+            }
         }
 
-        file_size = getFileSize(&request.target[1]);
+        file_size = getFileSize(&route->filePath[1]);
         response_size = createResponseMessage(response_message, status, header_field, body, file_size);
         if (response_size == -1)
         {
