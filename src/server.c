@@ -10,8 +10,6 @@
 #include "request.h"
 #include "io.h"
 
-#define SERVER_ADDR "127.0.0.1"
-#define SERVER_PORT 8080
 #define SIZE (5 * 1024)
 
 /**
@@ -106,72 +104,5 @@ int httpServer(int sock)
         // NOTE: レスポンスメッセージを送信する
         sendResponseMessage(sock, response_message, response_size);
     }
-    return 0;
-}
-
-int main(void)
-{
-    int w_addr, c_sock, DEFAULT_PROTOCOL = 0;
-    struct sockaddr_in a_addr;
-
-    // NOTE: ソケットを作成
-    w_addr = socket(AF_INET, SOCK_STREAM, DEFAULT_PROTOCOL);
-    if (w_addr == -1)
-    {
-        printf("socket error\n");
-        return -1;
-    }
-
-    // NOTE: 構造体を全て0にセット
-    memset(&a_addr, 0, sizeof(struct sockaddr_in));
-
-    /** サーバーのIPアドレスとボート番号の情報を設定 */
-    // NOTE: アドレスファミリーを指定
-    a_addr.sin_family = AF_INET;
-    // NOTE: 使用するポート番号を指定
-    a_addr.sin_port = htons((unsigned short)SERVER_PORT);
-    // NOTE: 使用するIPアドレスを指定
-    a_addr.sin_addr.s_addr = inet_addr(SERVER_ADDR);
-
-    // NOTE: ソケットを特定のネットワークアドレス（IPアドレスとポート番号の組）に紐付ける
-    if (bind(w_addr, (const struct sockaddr *)&a_addr, sizeof(a_addr)) == -1)
-    {
-        printf("bind error\n");
-        close(w_addr);
-        return -1;
-    }
-
-    // NOTE: ソケットを接続待ちに設定
-    if (listen(w_addr, 3) == -1)
-    {
-        printf("listen error\n");
-        close(w_addr);
-        return -1;
-    }
-
-    while (1)
-    {
-        printf("Waiting connect...\n");
-
-        // NOTE: 接続を受け付ける
-        c_sock = accept(w_addr, NULL, NULL);
-        if (c_sock == -1)
-        {
-            printf("accept error\n");
-            close(w_addr);
-            return -1;
-        }
-        printf("Connected!!\n");
-
-        // NOTE: 接続済みのソケットでデータのやり取り
-        httpServer(c_sock);
-
-        // NOTE: ソケット通信をクローズ
-        close(c_sock);
-
-        // NOTE: 次の接続要求を受け付ける
-    }
-    // NOTE: 接続待ちのソケットをクローズ
-    close(w_addr);
     return 0;
 }
