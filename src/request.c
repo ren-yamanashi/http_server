@@ -56,6 +56,9 @@ int recvRequestMessage(int sock, char *request_message, unsigned int buf_size)
      */
     recv_size = recv(sock, request_message, buf_size, RECV_FLAG);
 
+    // バッファの現在の終端をNULL文字で終了
+    request_message[recv_size] = '\0';
+
     return recv_size;
 }
 
@@ -67,17 +70,28 @@ int recvRequestMessage(int sock, char *request_message, unsigned int buf_size)
  */
 int parseRequestMessage(char *request_message, HttpRequest *request)
 {
-    char *body_part;
     char *line, *line_save;
-    char *header, *header_save;
-    char *header_value;
+    char *header, *header_save, *header_value;
     char *req_method = NULL;
     char *req_target = NULL;
     char *version = NULL;
-    int isBodyStarted = 0;
+
+    // NOTE: ヘッダーとボディを分離
+    char *headers_end = strstr(request_message, "\r\n\r\n");
+
+    if (!headers_end)
+    {
+        printf("Could not find end of headers\n");
+        return -1;
+    }
+
+    // ヘッダー部分をnullで終了し、ボディを「\r\n\r\n」の後に開始するように設定
+    *headers_end = '\0';
+    char *body_start = headers_end + 4;
 
     // NOTE: リクエストメッセージの1行目を取得
     line = strtok_r(request_message, "\r\n", &line_save);
+
     if (line == NULL)
     {
         printf("Could not get request\n");
@@ -105,12 +119,12 @@ int parseRequestMessage(char *request_message, HttpRequest *request)
 
     while (line)
     {
-
         header = strtok_r(line, ":", &header_save);
         header_value = strtok_r(NULL, "", &header_save);
         if (header && header_value && strcmp(header, "Content-Type") == 0)
         {
             // NOTE: コンテンツタイプを取得
+            // NOTE: `:`の後のスペースをスキップ
             header_value++;
             strncpy(request->contentType, header_value, sizeof(request->contentType) - 1);
             request->contentType[sizeof(request->contentType) - 1] = '\0';
@@ -121,11 +135,7 @@ int parseRequestMessage(char *request_message, HttpRequest *request)
     }
 
     // NOTE: ボディの取得
-    if (body_part != NULL)
-    {
-        strncpy(request->body, body_part, sizeof(request->body) - 1);
-        request->body[sizeof(request->body) - 1] = '\0';
-    }
+    snprintf(request->body, sizeof(request->body), "%s", body_start);
 
     return 0;
 }

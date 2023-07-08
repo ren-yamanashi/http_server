@@ -25,7 +25,6 @@
 void showMessage(char *message, unsigned int size)
 {
     unsigned int i;
-    printf("Show Message\n\n");
 
     for (i = 0; i < size; i++)
     {
@@ -67,9 +66,10 @@ int httpServer(int sock)
             break;
         }
 
+        printf("\nShow Request Message \n\n");
         showMessage(request_message, request_size);
 
-        // NOTE: 受信した文字列を解析してメソッドやリクエストターゲットを取得
+        // NOTE: 受信した文字列を解析
         if (parseRequestMessage(request_message, &request) == -1)
         {
             printf("parseRequestMessage error\n");
@@ -104,10 +104,8 @@ int httpServer(int sock)
             break;
         }
 
-        printf("Content-Type: %s\n", request.contentType);
-        printf("Body: %s\n", request.body);
-
         // NOTE: 送信するメッセージを表示
+        printf("\nShow Response Message \n\n");
         showMessage(response_message, response_size);
 
         // NOTE: レスポンスメッセージを送信する
