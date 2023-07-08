@@ -8,6 +8,7 @@
 #include "server.h"
 #include "response.h"
 #include "request.h"
+#include "router.h"
 #include "io.h"
 
 #define SIZE (5 * 1024)
@@ -33,7 +34,7 @@ void showMessage(char *message, unsigned int size)
  * @param sock: 接続済みのソケット
  * @return 0
  */
-int httpServer(int sock)
+int httpServer(int sock, Route *route)
 {
     int request_size, response_size;
     char request_message[SIZE];
@@ -42,7 +43,7 @@ int httpServer(int sock)
     char body[SIZE];
     int status;
     unsigned int file_size;
-    HttpRequest request;
+    HttpRequest request = {0};
 
     while (1)
     {
