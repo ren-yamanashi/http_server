@@ -133,7 +133,11 @@ int parseRequestMessage(char *request_message, HttpRequest *request)
     printf("Content-Type: %s\r\n", request->contentType);
     printf("body: %s\r\n", request->body);
 
-    parseRequestBody(request);
+    if (parseRequestBody(request) == -1)
+    {
+        printf("Failed to parse JSON\n");
+        return -1;
+    };
 
     return 0;
 }
@@ -151,12 +155,18 @@ int parseRequestBody(HttpRequest *request)
 
     if (strcmp(request->contentType, "application/json") == 0)
     {
-        KeyValue keyValue[5];
-        parseJson(request->body, keyValue, 5);
-        for (int i = 0; i < 5 && keyValue[i].key[0] != '\0'; i++)
+        int parsedCount = parseJson(request->body, request->parsedBody, sizeof(request->parsedBody) / sizeof(KeyValue));
+        if (parsedCount < 0)
         {
-            printf("Key: %s, Value: %s\n", keyValue[i].key, keyValue[i].value);
+            return -1;
         }
+
+        // NOTE: 解析した情報を出力
+        for (int i = 0; i < parsedCount; i++)
+        {
+            printf("Key: %s, Value: %s\n", request->parsedBody[i].key, request->parsedBody[i].value);
+        }
+
         return 0;
     }
     else if (strcmp(request->contentType, "text/plain") == 0)
