@@ -33,13 +33,7 @@ int recvRequestMessage(int sock, char *request_message, unsigned int buf_size)
     int RECV_FLAG = 0;
     int recv_size;
 
-    /**
-     *  @param sockfd 接続済みのソケット
-     *  @param request_message 受信データを格納するバッファのアドレス
-     *  @param buf_size bufのサイズ(バイト数)
-     *  @param RECV_FLAG 受信時の動作の詳細設定
-     *  @return 実際に接続先から受信したデータのバイト数
-     */
+    // NOTE: リクエストを受信
     recv_size = recv(sock, request_message, buf_size, RECV_FLAG);
 
     // バッファの現在の終端をNULL文字で終了
