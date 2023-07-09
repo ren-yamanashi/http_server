@@ -1,7 +1,8 @@
 #ifndef _IO_H
 #define _IO_H
 
-typedef struct {
+typedef struct
+{
     char key[256];
     char value[256];
 } KeyValue;

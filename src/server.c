@@ -8,6 +8,7 @@
 #include "server.h"
 #include "response.h"
 #include "request.h"
+#include "router.h"
 #include "io.h"
 
 #define SIZE (5 * 1024)
@@ -33,16 +34,14 @@ void showMessage(char *message, unsigned int size)
  * @param sock: 接続済みのソケット
  * @return 0
  */
-int httpServer(int sock)
+int httpServer(int sock, Route *route)
 {
     int request_size, response_size;
     char request_message[SIZE];
     char response_message[SIZE];
     char header_field[SIZE];
-    char body[SIZE];
-    int status;
-    unsigned int file_size;
-    HttpRequest request;
+    HttpRequest request = {0};
+    HttpResponse response = {0};
 
     while (1)
     {
@@ -52,7 +51,6 @@ int httpServer(int sock)
             printf("recvRequestMessage error\n");
             break;
         }
-
         if (request_size == 0)
         {
             // NOTE: 受信サイズが0の場合は相手が接続を閉じていると判断
@@ -69,28 +67,33 @@ int httpServer(int sock)
             break;
         }
 
-        // NOTE: requestMethodが受信可能なものか判別
-        if (checkRequestMethod(request.method) != 0)
+        // NOTE: routeで設定した情報と、リクエスト内容が一致していない場合、contentTypeの値が受け入れ不可であれば404を返す
+        if ((strcmp(request.method, route->method) != 0 || strcmp(request.target, route->path) != 0) || (strcmp(route->contentType, "text/html") != 0 && strcmp(route->contentType, "text/plain") != 0))
         {
-            status = 404;
+            response.status = 404;
         }
         else
         {
-            if (strcmp(request.target, "/") == 0)
+            // NOTE: contentTypeが`text/html`の場合は、ファイルを読み込む
+            if (strcmp(route->contentType, "text/html") == 0)
             {
-                // NOTE: `/`が指定されたときは`/index.html`に置き換える
-                strcpy(request.target, "/index.html");
+                response.status = processingRequest(&response.body, &route->filePath[1]);
+                response.body_size = getFileSize(&route->filePath[1]);
             }
+            // NOTE: contentTypeが`text/plain`の場合は、そのままbodyに格納
             else
             {
-                // NOTE: とりあえず、`~/hoge`リクエストに対して、`hoge.html`ファイルを返す
-                strcat(request.target, ".html");
+                strncpy(response.body, route->message, sizeof(response.body) - 1);
+                response.body[sizeof(response.body) - 1] = '\0';
+                response.status = 200;
+                response.body_size = strlen(response.body);
             }
-            status = processingRequest(body, &request.target[1]);
+            strncpy(response.content_type, route->contentType, sizeof(response.content_type) - 1);
+            response.content_type[sizeof(response.content_type) - 1] = '\0';
         }
 
-        file_size = getFileSize(&request.target[1]);
-        response_size = createResponseMessage(response_message, status, header_field, body, file_size);
+        response_size = createResponseMessage(response_message, header_field, &response);
+
         if (response_size == -1)
         {
             printf("createResponseMessage error\n");

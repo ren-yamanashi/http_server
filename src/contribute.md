@@ -1,20 +1,4 @@
 ### C言語の標準ライブラリ関数
-- strncpy
-一つの文字列から別の文字列へ指定された数の文字をコピーする
-n文字をコピーした時点でソース文字列の終端に達していない場合、文字列には終端を意味するnull文字が追加されない。
-なので、終端に`\0`を追加する必要がある。
-```c
-/**
- * 
- * @param dest コピー先の文字列
- * @param src コピー元の文字列
- * @param n コピーする最大文字数
- * strncpy(char *dest, const char *src, size_t n);
- *
- * // example
- * request->contentType[sizeof(request->contentType) - 1] = "\0";
- */
-```
 
 - strcat
 文字列の連結を行う。
@@ -44,4 +28,14 @@ int main() {
 
     return 0;
 }
+```
+- strncpy
+一つの文字列から別の文字列へ指定された数の文字をコピーする
+n文字をコピーした時点でソース文字列の終端に達していない場合、文字列には終端を意味するnull文字が追加されない。
+なので、終端に`\0`を追加する必要がある。
+```c
+const char *message = "Hello, world!";
+char body[1024];
+strncpy(body, message, sizeof(body) - 1);
+body[sizeof(body) - 1] = '\0';
 ```

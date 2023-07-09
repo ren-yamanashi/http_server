@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "server.h"
+#include "router.h"
 
 #define SERVER_ADDR "127.0.0.1"
 #define SERVER_PORT 8080
@@ -14,6 +15,12 @@ int main(void)
 {
     int waiting_sock_addr, connected_sock_addr, DEFAULT_PROTOCOL = 0;
     struct sockaddr_in sock_addr_info;
+    Route route = {0};
+    route.method = "POST";
+    route.path = "/";
+    route.contentType = "text/html";
+    route.filePath = "/index.html";
+    route.message = "hello world!";
 
     // NOTE: ソケットを作成
     waiting_sock_addr = socket(AF_INET, SOCK_STREAM, DEFAULT_PROTOCOL);
@@ -65,7 +72,7 @@ int main(void)
         printf("Connected!!\n");
 
         // NOTE: 接続済みのソケットでデータのやり取り
-        httpServer(connected_sock_addr);
+        httpServer(connected_sock_addr, &route);
 
         // NOTE: ソケット通信をクローズ
         close(connected_sock_addr);
