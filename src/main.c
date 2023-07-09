@@ -15,12 +15,11 @@ int main(void)
 {
     int waiting_sock_addr, connected_sock_addr, DEFAULT_PROTOCOL = 0;
     struct sockaddr_in sock_addr_info;
-    Route route = {0};
-    route.method = "POST";
-    route.path = "/";
-    route.contentType = "text/html";
-    route.filePath = "/index.html";
-    route.message = "hello world!";
+    Route routes[] = {
+        {"POST", "/", "text/html", "/index.html", ""},
+        {"POST", "/test", "text/html", "/test.html", ""},
+        {"POST", "/plain", "text/plain", "/test.html", "hello world!"},
+    };
 
     // NOTE: ソケットを作成
     waiting_sock_addr = socket(AF_INET, SOCK_STREAM, DEFAULT_PROTOCOL);
@@ -72,7 +71,7 @@ int main(void)
         printf("Connected!!\n");
 
         // NOTE: 接続済みのソケットでデータのやり取り
-        httpServer(connected_sock_addr, &route);
+        httpServer(connected_sock_addr, routes, sizeof(routes) / sizeof(routes[0]));
 
         // NOTE: ソケット通信をクローズ
         close(connected_sock_addr);

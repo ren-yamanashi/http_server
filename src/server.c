@@ -32,9 +32,11 @@ void showMessage(char *message, unsigned int size)
 /**
  * HTTPサーバーの処理を行う関数
  * @param sock: 接続済みのソケット
+ * @param routes: ルーティング情報を示す構造体(Route)の配列
+ * @param routesCount: ルーティング情報の数
  * @return 0
  */
-int httpServer(int sock, Route *route)
+int httpServer(int sock, Route *routes, int routesCount)
 {
     int request_size, response_size;
     char request_message[SIZE];
@@ -42,6 +44,7 @@ int httpServer(int sock, Route *route)
     char header_field[SIZE];
     HttpRequest request = {0};
     HttpResponse response = {0};
+    int matchedRoute = -1;
 
     while (1)
     {
@@ -67,28 +70,38 @@ int httpServer(int sock, Route *route)
             break;
         }
 
+        for (int i = 0; i < routesCount; i++)
+        {
+            if ((strcmp(request.method, routes[i].method) == 0) &&
+                (strcmp(request.target, routes[i].path) == 0) &&
+                (strcmp(routes[i].contentType, "text/html") == 0 || strcmp(routes[i].contentType, "text/plain") == 0))
+            {
+                matchedRoute = i;
+                break;
+            }
+        }
         // NOTE: routeで設定した情報と、リクエスト内容が一致していない場合、contentTypeの値が受け入れ不可であれば404を返す
-        if ((strcmp(request.method, route->method) != 0 || strcmp(request.target, route->path) != 0) || (strcmp(route->contentType, "text/html") != 0 && strcmp(route->contentType, "text/plain") != 0))
+        if (matchedRoute == -1)
         {
             response.status = 404;
         }
         else
         {
             // NOTE: contentTypeが`text/html`の場合は、ファイルを読み込む
-            if (strcmp(route->contentType, "text/html") == 0)
+            if (strcmp(routes[matchedRoute].contentType, "text/html") == 0)
             {
-                response.status = processingRequest(&response.body, &route->filePath[1]);
-                response.body_size = getFileSize(&route->filePath[1]);
+                response.status = processingRequest(&response.body, &routes[matchedRoute].filePath[1]);
+                response.body_size = getFileSize(&routes[matchedRoute].filePath[1]);
             }
             // NOTE: contentTypeが`text/plain`の場合は、そのままbodyに格納
             else
             {
-                strncpy(response.body, route->message, sizeof(response.body) - 1);
+                strncpy(response.body, routes[matchedRoute].message, sizeof(response.body) - 1);
                 response.body[sizeof(response.body) - 1] = '\0';
                 response.status = 200;
                 response.body_size = strlen(response.body);
             }
-            strncpy(response.content_type, route->contentType, sizeof(response.content_type) - 1);
+            strncpy(response.content_type, routes[matchedRoute].contentType, sizeof(response.content_type) - 1);
             response.content_type[sizeof(response.content_type) - 1] = '\0';
         }
 

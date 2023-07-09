@@ -11,7 +11,6 @@ typedef struct
     const char *contentType;
     const char *filePath;
     const char *message;
-    void (*handler)(HttpRequest *, HttpResponse *);
 } Route;
 
 #endif
