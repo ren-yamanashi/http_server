@@ -93,8 +93,8 @@ int parseRequestMessage(char *request_message, HttpRequest *request)
             // NOTE: コンテンツタイプを取得
             // NOTE: `:`の後のスペースをスキップ
             header_value++;
-            strncpy(request->contentType, header_value, sizeof(request->contentType) - 1);
-            request->contentType[sizeof(request->contentType) - 1] = '\0';
+            strncpy(request->content_type, header_value, sizeof(request->content_type) - 1);
+            request->content_type[sizeof(request->content_type) - 1] = '\0';
         }
 
         // NOTE: 行の取得を繰り返す
@@ -124,23 +124,16 @@ int parseRequestMessage(char *request_message, HttpRequest *request)
 int parseRequestBody(HttpRequest *request)
 {
 
-    if (strcmp(request->contentType, "application/json") == 0)
+    if (strcmp(request->content_type, "application/json") == 0)
     {
-        int parsedCount = parseJson(request->body, request->parsedBody, sizeof(request->parsedBody) / sizeof(KeyValue));
-        if (parsedCount < 0)
+        request->kv_count = parseJson(request->body, request->parsed_kv, sizeof(request->parsed_kv) / sizeof(KeyValue));
+        if (request->kv_count < 0)
         {
             return -1;
         }
-
-        // NOTE: 解析した情報を出力
-        for (int i = 0; i < parsedCount; i++)
-        {
-            printf("Key: %s, Value: %s\n", request->parsedBody[i].key, request->parsedBody[i].value);
-        }
-
         return 0;
     }
-    else if (strcmp(request->contentType, "text/plain") == 0)
+    else if (strcmp(request->content_type, "text/plain") == 0)
     {
         return 0;
     }
