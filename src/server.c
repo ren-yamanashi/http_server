@@ -92,7 +92,7 @@ int httpServer(int sock, Route *route)
             response.content_type[sizeof(response.content_type) - 1] = '\0';
         }
 
-        response_size = createResponseMessage(response_message, &response, header_field);
+        response_size = createResponseMessage(response_message, header_field, &response);
 
         if (response_size == -1)
         {

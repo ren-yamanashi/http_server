@@ -15,7 +15,7 @@
  * @param body_size ボディのサイズ
  * @return レスポンスメッセージのデータサイズ(バイト長)
  */
-int createResponseMessage(char *response_message, HttpResponse *response, char *header)
+int createResponseMessage(char *response_message, char *header, HttpResponse *response)
 {
     unsigned int no_body_len;
     unsigned int body_len;
