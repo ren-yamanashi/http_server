@@ -6,19 +6,6 @@
 #include "request.h"
 #include "io.h"
 
-/**
- * リクエストメソッドが受信可能なものか判別
- * @param req_method リクエストメソッド
- * @return 可能な場合は0それ以外は-1
- */
-int checkRequestMethod(const char *req_method)
-{
-    if (strcmp(req_method, "GET") == 0 || strcmp(req_method, "POST") == 0)
-    {
-        return 0;
-    }
-    return -1;
-}
 
 /**
  * リクエストメッセージを受信する
@@ -117,15 +104,7 @@ int parseRequestMessage(char *request_message, HttpRequest *request)
     // NOTE: ボディの取得
     snprintf(request->body, sizeof(request->body), "%s", body_start);
 
-    // リクエストの情報を表示
-    printf("Parsed the request!!\n");
-    printf("Method: %s\r\n", request->method);
-    printf("Target: %s\r\n", request->target);
-    printf("Http Version: %s\r\n", request->version);
-    printf("Content-Type: %s\r\n", request->contentType);
-    printf("body: %s\r\n", request->body);
-
-    if (parseRequestBody(request) == -1)
+    if (strlen(request->body) != 0 && parseRequestBody(request) == -1)
     {
         printf("Failed to parse JSON\n");
         return -1;
