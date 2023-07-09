@@ -7,7 +7,7 @@ typedef struct
     char value[256];
 } KeyValue;
 
-int parseJson(char *json, KeyValue *keyValue, int pairsCount);
+int parseJson(char *json, KeyValue *key_value, int pairs_count);
 unsigned int getFileSize(const char *);
 
 #endif

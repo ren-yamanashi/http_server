@@ -3,7 +3,7 @@
 
 #include "router.h"
 
-int httpServer(int sock, Route *routes, int routesCount);
+int httpServer(int sock, Route *routes, int routes_count);
 void showMessage(char *message, unsigned int size);
 
 #endif

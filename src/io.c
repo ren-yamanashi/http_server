@@ -39,18 +39,18 @@ unsigned int getFileSize(const char *path)
 /**
  * JSONを解析
  * @param json 対象のjson
- * @param keyValue JsonPair構造体のアドレス この構造体に解析した値が格納される
- * @param pairsCount `key:value`のペアを最大いくつ生成するか
+ * @param key_value JsonPair構造体のアドレス この構造体に解析した値が格納される
+ * @param pairs_count `key:value`のペアを最大いくつ生成するか
  * @return 解析したペアの数
  */
-int parseJson(char *json, KeyValue *keyValue, int pairsCount)
+int parseJson(char *json, KeyValue *key_value, int pairs_count)
 {
     char *key, *value;
     // NOTE: 引数jsonに渡された文字列を `{` , `}` , `:` , ` ` のいずれかで分割
     char *token = strtok(json, "{},: ");
     int i = 0;
 
-    while (token != NULL && i < pairsCount)
+    while (token != NULL && i < pairs_count)
     {
         // NOTE: 最初のトークンをkeyとする
         key = token;
@@ -68,18 +68,18 @@ int parseJson(char *json, KeyValue *keyValue, int pairsCount)
         }
 
         // NOTE: `key`の値をpairsのkeyに格納
-        strncpy(keyValue[i].key, key, sizeof(keyValue[i].key) - 1);
-        keyValue[i].key[sizeof(keyValue[i].key) - 1] = '\0';
+        strncpy(key_value[i].key, key, sizeof(key_value[i].key) - 1);
+        key_value[i].key[sizeof(key_value[i].key) - 1] = '\0';
 
         if (value != NULL)
         {
             // NOTE: `value`の値をpairsのvalueに格納
-            strncpy(keyValue[i].value, value, sizeof(keyValue[i].value) - 1);
-            keyValue[i].value[sizeof(keyValue[i].value) - 1] = '\0';
+            strncpy(key_value[i].value, value, sizeof(key_value[i].value) - 1);
+            key_value[i].value[sizeof(key_value[i].value) - 1] = '\0';
         }
         else
         {
-            keyValue[i].value[0] = '\0';
+            key_value[i].value[0] = '\0';
         }
 
         i++;
