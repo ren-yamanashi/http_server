@@ -18,7 +18,7 @@ int main(void)
     Route route = {0};
     route.method = "POST";
     route.path = "/";
-    route.contentType = "text/html";
+    route.contentType = "text/plain";
     route.filePath = "/index.html";
     route.message = "hello world!";
 

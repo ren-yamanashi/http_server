@@ -15,14 +15,14 @@
  * @param body_size ボディのサイズ
  * @return レスポンスメッセージのデータサイズ(バイト長)
  */
-int createResponseMessage(char *response_message, int status, char *header, char *body, unsigned int body_size)
+int createResponseMessage(char *response_message, int status, char *header, char *body, unsigned int body_size, char *content_type)
 {
     unsigned int no_body_len;
     unsigned int body_len;
     char content_length[50];
     response_message[0] = '\0';
 
-    sprintf(content_length, "Content-Length: %u\r\n", body_size);
+    sprintf(content_length, "Content-Length: %u\r\nContent-Type: %s\r\n", body_size, content_type);
     strcat(header, content_length);
     if (status == 200)
     {
