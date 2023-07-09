@@ -14,7 +14,6 @@ typedef struct
 
 int parseRequestMessage(char *input, HttpRequest *request);
 int recvRequestMessage(int, char *, unsigned int);
-int processingRequest(char *, char *);
 int parseRequestBody(HttpRequest *request);
 
 #endif

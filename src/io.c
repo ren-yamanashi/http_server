@@ -1,3 +1,5 @@
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -86,4 +88,38 @@ int parseJson(char *json, KeyValue *key_value, int pairs_count)
     }
 
     return i;
+}
+
+/**
+ * ファイルの読み込みを行う
+ * @param body ボディを格納するバッファへのアドレス
+ * @param file_path リクエストターゲットに対するファイルへのパス
+ * @return ステータスコード (ファイルがない場合は404)
+ */
+int readFile(char *body, char *file_path)
+{
+    FILE *file;
+    int file_size, DATA_BLOCK_SIZE_FOR_READ = 1;
+
+    // NOTE: ファイルサイズを取得
+    file_size = getFileSize(file_path);
+    if (file_size == 0)
+    {
+        // NOTE: ファイルサイズが0やファイルが存在しない場合は404を返す
+        printf("getFileSize error\n");
+        return 404;
+    }
+
+    // NOTE: ファイルを読み込み
+    file = fopen(file_path, "rb");
+    if (file == NULL)
+    {
+        printf("Error opening file: %s\n", file_path);
+        return 404;
+    }
+    // NOTE: ファイルを読み込んで、bodyに格納
+    fread(body, DATA_BLOCK_SIZE_FOR_READ, file_size, file);
+    fclose(file);
+
+    return 200;
 }

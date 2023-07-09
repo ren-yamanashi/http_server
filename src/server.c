@@ -91,7 +91,7 @@ int httpServer(int sock, Route *routes, int routes_count)
             // NOTE: content_typeが`text/html`の場合は、ファイルを読み込む
             if (strcmp(routes[matched_route].content_type, "text/html") == 0)
             {
-                response.status = processingRequest(&response.body, &routes[matched_route].file_path[1]);
+                response.status = readFile(&response.body, &routes[matched_route].file_path[1]);
                 response.body_size = getFileSize(&routes[matched_route].file_path[1]);
             }
             // NOTE: content_typeが`text/plain`の場合は、そのままbodyに格納
@@ -106,7 +106,10 @@ int httpServer(int sock, Route *routes, int routes_count)
             response.content_type[sizeof(response.content_type) - 1] = '\0';
 
             // NOTE: routeで登録したハンドラーを実行
-            routes[matched_route].handler(&request, &response);
+            if (routes[matched_route].handler != NULL)
+            {
+                routes[matched_route].handler(&request, &response);
+            }
         }
 
         response_size = createResponseMessage(response_message, header_field, &response);
