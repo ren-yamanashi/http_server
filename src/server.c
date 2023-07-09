@@ -40,7 +40,6 @@ int httpServer(int sock, Route *route)
     char request_message[SIZE];
     char response_message[SIZE];
     char header_field[SIZE];
-    char body[SIZE];
     HttpRequest request = {0};
     HttpResponse response = {0};
 
@@ -78,22 +77,22 @@ int httpServer(int sock, Route *route)
             // NOTE: contentTypeが`text/html`の場合は、ファイルを読み込む
             if (strcmp(route->contentType, "text/html") == 0)
             {
-                response.status = processingRequest(body, &route->filePath[1]);
+                response.status = processingRequest(&response.body, &route->filePath[1]);
                 response.body_size = getFileSize(&route->filePath[1]);
             }
             // NOTE: contentTypeが`text/plain`の場合は、そのままbodyに格納
             else
             {
-                strncpy(body, route->message, sizeof(body) - 1);
-                body[sizeof(body) - 1] = '\0';
+                strncpy(response.body, route->message, sizeof(response.body) - 1);
+                response.body[sizeof(response.body) - 1] = '\0';
                 response.status = 200;
-                response.body_size = strlen(body);
+                response.body_size = strlen(response.body);
             }
             strncpy(response.content_type, route->contentType, sizeof(response.content_type) - 1);
             response.content_type[sizeof(response.content_type) - 1] = '\0';
         }
 
-        response_size = createResponseMessage(response_message, &response, header_field, body);
+        response_size = createResponseMessage(response_message, &response, header_field);
 
         if (response_size == -1)
         {

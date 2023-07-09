@@ -10,7 +10,7 @@ typedef struct
     char body[1024];
 } HttpResponse;
 
-int createResponseMessage(char *response_message, HttpResponse *response, char *header, char *body);
+int createResponseMessage(char *response_message, HttpResponse *response, char *header);
 int sendResponseMessage(int, char *, unsigned int);
 
 #endif

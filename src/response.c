@@ -15,7 +15,7 @@
  * @param body_size ボディのサイズ
  * @return レスポンスメッセージのデータサイズ(バイト長)
  */
-int createResponseMessage(char *response_message, HttpResponse *response, char *header, char *body)
+int createResponseMessage(char *response_message, HttpResponse *response, char *header)
 {
     unsigned int no_body_len;
     unsigned int body_len;
@@ -33,7 +33,7 @@ int createResponseMessage(char *response_message, HttpResponse *response, char *
         body_len = response->body_size;
 
         // NOTE: ヘッダーフィールドの後ろにボディをコピー
-        memcpy(&response_message[no_body_len], body, body_len);
+        memcpy(&response_message[no_body_len], response->body, body_len);
     }
     else if (response->status == 404)
     {
