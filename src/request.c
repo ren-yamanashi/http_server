@@ -6,7 +6,6 @@
 #include "request.h"
 #include "io.h"
 
-
 /**
  * リクエストメッセージを受信する
  * @param sock 接続済みのソケット
@@ -141,38 +140,4 @@ int parseRequestBody(HttpRequest *request)
     {
         return -1;
     }
-}
-
-/**
- * リクエストに対する処理を行う
- * @param body ボディを格納するバッファへのアドレス
- * @param file_path リクエストターゲットに対するファイルへのパス
- * @return ステータスコード (ファイルがない場合は404)
- */
-int processingRequest(char *body, char *file_path)
-{
-    FILE *file;
-    int file_size, DATA_BLOCK_SIZE_FOR_READ = 1;
-
-    // NOTE: ファイルサイズを取得
-    file_size = getFileSize(file_path);
-    if (file_size == 0)
-    {
-        // NOTE: ファイルサイズが0やファイルが存在しない場合は404を返す
-        printf("getFileSize error\n");
-        return 404;
-    }
-
-    // NOTE: ファイルを読み込み
-    file = fopen(file_path, "rb");
-    if (file == NULL)
-    {
-        printf("Error opening file: %s\n", file_path);
-        return 404;
-    }
-    // NOTE: ファイルを読み込んで、bodyに格納
-    fread(body, DATA_BLOCK_SIZE_FOR_READ, file_size, file);
-    fclose(file);
-
-    return 200;
 }
