@@ -4,12 +4,13 @@
 typedef struct
 {
     int status;
-    char message[32];
-    int contentLength;
-    char *body;
+    char content_type[32];
+    int content_length;
+    unsigned int body_size;
+    char body[1024];
 } HttpResponse;
 
-int createResponseMessage(char *response_message, int status, char *header, char *body, unsigned int body_size, char *content_type);
+int createResponseMessage(char *response_message, HttpResponse *response, char *header, char *body);
 int sendResponseMessage(int, char *, unsigned int);
 
 #endif

@@ -41,10 +41,8 @@ int httpServer(int sock, Route *route)
     char response_message[SIZE];
     char header_field[SIZE];
     char body[SIZE];
-    char content_type[32];
-    int status;
-    unsigned int body_size;
     HttpRequest request = {0};
+    HttpResponse response = {0};
 
     while (1)
     {
@@ -73,29 +71,29 @@ int httpServer(int sock, Route *route)
         // NOTE: routeで設定した情報と、リクエスト内容が一致していない場合、contentTypeの値が受け入れ不可であれば404を返す
         if ((strcmp(request.method, route->method) != 0 || strcmp(request.target, route->path) != 0) || (strcmp(route->contentType, "text/html") != 0 && strcmp(route->contentType, "text/plain") != 0))
         {
-            status = 404;
+            response.status = 404;
         }
         else
         {
             // NOTE: contentTypeが`text/html`の場合は、ファイルを読み込む
             if (strcmp(route->contentType, "text/html") == 0)
             {
-                status = processingRequest(body, &route->filePath[1]);
-                body_size = getFileSize(&route->filePath[1]);
+                response.status = processingRequest(body, &route->filePath[1]);
+                response.body_size = getFileSize(&route->filePath[1]);
             }
             // NOTE: contentTypeが`text/plain`の場合は、そのままbodyに格納
             else
             {
                 strncpy(body, route->message, sizeof(body) - 1);
                 body[sizeof(body) - 1] = '\0';
-                status = 200;
-                body_size = strlen(body);
+                response.status = 200;
+                response.body_size = strlen(body);
             }
-            strncpy(content_type, route->contentType, sizeof(content_type) - 1);
-            content_type[sizeof(content_type) - 1] = '\0';
+            strncpy(response.content_type, route->contentType, sizeof(response.content_type) - 1);
+            response.content_type[sizeof(response.content_type) - 1] = '\0';
         }
 
-        response_size = createResponseMessage(response_message, status, header_field, body, body_size, content_type);
+        response_size = createResponseMessage(response_message, &response, header_field, body);
 
         if (response_size == -1)
         {

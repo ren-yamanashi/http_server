@@ -15,27 +15,27 @@
  * @param body_size ボディのサイズ
  * @return レスポンスメッセージのデータサイズ(バイト長)
  */
-int createResponseMessage(char *response_message, int status, char *header, char *body, unsigned int body_size, char *content_type)
+int createResponseMessage(char *response_message, HttpResponse *response, char *header, char *body)
 {
     unsigned int no_body_len;
     unsigned int body_len;
     char content_length[50];
     response_message[0] = '\0';
 
-    sprintf(content_length, "Content-Length: %u\r\nContent-Type: %s\r\n", body_size, content_type);
+    sprintf(content_length, "Content-Length: %u\r\nContent-Type: %s\r\n", response->body_size, response->content_type);
     strcat(header, content_length);
-    if (status == 200)
+    if (response->status == 200)
     {
         // NOTE: レスポンス行とヘッダーフィールドの文字列を作成
         sprintf(response_message, "HTTP/1.1 200 OK\r\n%s\r\n", header);
 
         no_body_len = strlen(response_message);
-        body_len = body_size;
+        body_len = response->body_size;
 
         // NOTE: ヘッダーフィールドの後ろにボディをコピー
         memcpy(&response_message[no_body_len], body, body_len);
     }
-    else if (status == 404)
+    else if (response->status == 404)
     {
         // NOTE: レスポンス行とヘッダーフィールドの文字列を作成
         sprintf(response_message, "HTTP/1.1 404 Not Found\r\n%s\r\n", header);
@@ -46,7 +46,7 @@ int createResponseMessage(char *response_message, int status, char *header, char
     else
     {
         // NOTE: statusコードをプログラムがサポートしていない場合
-        printf("Not support status(%d)\n", status);
+        printf("Not support status(%d)\n", response->status);
         return -1;
     }
 
