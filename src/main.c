@@ -16,7 +16,7 @@ int main(void)
     int waiting_sock_addr, connected_sock_addr, DEFAULT_PROTOCOL = 0;
     struct sockaddr_in sock_addr_info;
     Route routes[] = {
-        {"POST", "/", "text/html", "/index.html", ""},
+        {"GET", "/", "text/html", "/index.html", ""},
         {"POST", "/test", "text/html", "/test.html", ""},
         {"POST", "/plain", "text/plain", "/test.html", "hello world!"},
     };

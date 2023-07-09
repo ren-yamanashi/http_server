@@ -21,6 +21,7 @@ int createResponseMessage(char *response_message, char *header, HttpResponse *re
     unsigned int body_len;
     char content_length[50];
     response_message[0] = '\0';
+    header[0] = '\0';
 
     sprintf(content_length, "Content-Length: %u\r\nContent-Type: %s\r\n", response->body_size, response->content_type);
     strcat(header, content_length);

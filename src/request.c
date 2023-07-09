@@ -117,15 +117,7 @@ int parseRequestMessage(char *request_message, HttpRequest *request)
     // NOTE: ボディの取得
     snprintf(request->body, sizeof(request->body), "%s", body_start);
 
-    // リクエストの情報を表示
-    printf("Parsed the request!!\n");
-    printf("Method: %s\r\n", request->method);
-    printf("Target: %s\r\n", request->target);
-    printf("Http Version: %s\r\n", request->version);
-    printf("Content-Type: %s\r\n", request->contentType);
-    printf("body: %s\r\n", request->body);
-
-    if (parseRequestBody(request) == -1)
+    if (strlen(request->body) != 0 && parseRequestBody(request) == -1)
     {
         printf("Failed to parse JSON\n");
         return -1;
