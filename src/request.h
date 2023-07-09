@@ -12,7 +12,6 @@ typedef struct
 } HttpRequest;
 
 int parseRequestMessage(char *input, HttpRequest *request);
-int checkRequestMethod(const char *req_method);
 int recvRequestMessage(int, char *, unsigned int);
 int processingRequest(char *, char *);
 int parseRequestBody(HttpRequest *request);
