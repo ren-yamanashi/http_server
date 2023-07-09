@@ -18,8 +18,9 @@ int main(void)
     Route route = {0};
     route.method = "POST";
     route.path = "/";
-    route.sendType = "text/html";
+    route.contentType = "text/html";
     route.filePath = "/index.html";
+    route.message = "hello world!";
 
     // NOTE: ソケットを作成
     waiting_sock_addr = socket(AF_INET, SOCK_STREAM, DEFAULT_PROTOCOL);

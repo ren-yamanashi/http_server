@@ -8,8 +8,9 @@ typedef struct
 {
     const char *method;
     const char *path;
-    const char *sendType;
+    const char *contentType;
     const char *filePath;
+    const char *message;
     void (*handler)(HttpRequest *, HttpResponse *);
 } Route;
 

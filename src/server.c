@@ -42,7 +42,7 @@ int httpServer(int sock, Route *route)
     char header_field[SIZE];
     char body[SIZE];
     int status;
-    unsigned int file_size;
+    unsigned int body_size;
     HttpRequest request = {0};
 
     while (1)
@@ -77,21 +77,27 @@ int httpServer(int sock, Route *route)
         }
         else
         {
-            if (strcmp(route->sendType, "text/html") == 0)
+            // NOTE: contentTypeが`text/html`の場合は、ファイルを読み込む
+            if (strcmp(route->contentType, "text/html") == 0)
             {
                 status = processingRequest(body, &route->filePath[1]);
+                body_size = getFileSize(&route->filePath[1]);
             }
-            else if (strcmp(route->sendType, "text/plain") == 0)
+            // NOTE: contentTypeが`text/plain`の場合は、そのままbodyに格納
+            else if (strcmp(route->contentType, "text/plain") == 0)
             {
+                strncpy(body, route->message, sizeof(body) - 1);
+                body[sizeof(body) - 1] = '\0';
+                status = 200;
+                body_size = strlen(body);
             }
             else
             {
                 status = 404;
             }
+            response_size = createResponseMessage(response_message, status, header_field, body, body_size);
         }
 
-        file_size = getFileSize(&route->filePath[1]);
-        response_size = createResponseMessage(response_message, status, header_field, body, file_size);
         if (response_size == -1)
         {
             printf("createResponseMessage error\n");
