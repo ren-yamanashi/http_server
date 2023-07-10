@@ -11,11 +11,16 @@
 #define SERVER_ADDR "127.0.0.1"
 #define SERVER_PORT 8080
 
-void postRequestHandler(const HttpRequest *const request, const HttpResponse *const response)
+void requestHandler(const HttpRequest *const request, const HttpResponse *const response)
 {
-    for (int i = 0; i < request->kv_count; i++)
+    for (int i = 0; i < request->parsed_kv_count; i++)
     {
         printf("Request Body: {%s: %s}\n", request->parsed_kv[i].key, request->parsed_kv[i].value);
+    }
+
+    for (int i = 0; i < request->param_kv_count; i++)
+    {
+        printf("Request param: {%s: %s}\n", request->param_kv[i].key, request->param_kv[i].value);
     }
 }
 
@@ -25,8 +30,10 @@ int main(void)
     struct sockaddr_in sock_addr_info;
     Route routes[] = {
         {"GET", "/", "text/html", "/index.html", "", NULL},
-        {"POST", "/test", "text/html", "/test.html", "", postRequestHandler},
-        {"POST", "/plain", "text/plain", "/test.html", "hello world!", postRequestHandler},
+        {"GET", "/user/:id", "text/html", "/index.html", "", requestHandler},
+        {"GET", "/user/:id/textbook/:textbookId", "text/html", "/index.html", "", requestHandler},
+        {"POST", "/test", "text/html", "/test.html", "", requestHandler},
+        {"POST", "/plain", "text/plain", "", "hello world!", requestHandler},
     };
 
     // NOTE: ソケットを作成

@@ -125,8 +125,8 @@ int parseRequestBody(HttpRequest *request)
 
     if (strcmp(request->content_type, "application/json") == 0)
     {
-        request->kv_count = parseJson(request->body, request->parsed_kv, sizeof(request->parsed_kv) / sizeof(KeyValue));
-        if (request->kv_count < 0)
+        request->parsed_kv_count = parseJson(request->body, request->parsed_kv, sizeof(request->parsed_kv) / sizeof(KeyValue));
+        if (request->parsed_kv_count < 0)
         {
             return -1;
         }
@@ -140,4 +140,74 @@ int parseRequestBody(HttpRequest *request)
     {
         return -1;
     }
+}
+
+/**
+ * リクエストURLにパラメータが含まれる場合に、routeで設定したpathを一致するかを確認する
+ * @param request_url リクエストURLを示すアドレス
+ * @param route_path ルートのパスを示すアドレス
+ * @return 一致した場合は1 そうでない場合は0
+ */
+int isPathMatch(const char *request_url, const char *route_path)
+{
+    const char *delim = "/";
+    char route_copy[1024];
+    char request_copy[1024];
+    char *route_saveptr;
+    char *request_saveptr;
+    strcpy(route_copy, route_path);
+    strcpy(request_copy, request_url);
+    char *route_token = strtok_r(route_copy, delim, &route_saveptr);
+    char *request_token = strtok_r(request_copy, delim, &request_saveptr);
+
+    while (route_token != NULL && request_token != NULL)
+    {
+        if (route_token[0] != ':' && strcmp(route_token, request_token) != 0)
+        {
+            return 0;
+        }
+        route_token = strtok_r(NULL, delim, &route_saveptr);
+        request_token = strtok_r(NULL, delim, &request_saveptr);
+    }
+
+    if (route_token != NULL || request_token != NULL)
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
+/**
+ * リクエストURLを解析して、urlパラメータを取得する
+ * @param request HttpRequest構造体を示すアドレス
+ * @param route_path routeで指定したpathを示すアドレス
+ * @return
+ */
+int parseRequestURL(const char *route_path, HttpRequest *request)
+{
+    const char *delim = "/";
+    char route_copy[1024];
+    char request_copy[1024];
+    char *route_saveptr;
+    char *request_saveptr;
+    strcpy(route_copy, route_path);
+    strcpy(request_copy, request->target);
+    char *route_token = strtok_r(route_copy, delim, &route_saveptr);
+    char *request_token = strtok_r(request_copy, delim, &request_saveptr);
+    int param_kv_count = 0;
+
+    while (route_token != NULL && request_token != NULL)
+    {
+        if (route_token[0] == ':')
+        {
+            strncpy(request->param_kv[param_kv_count].key, route_token, sizeof(request->param_kv[param_kv_count].key) - 1);
+            strncpy(request->param_kv[param_kv_count].value, request_token, sizeof(request->param_kv[param_kv_count].value) - 1);
+            param_kv_count++;
+        }
+        route_token = strtok_r(NULL, delim, &route_saveptr);
+        request_token = strtok_r(NULL, delim, &request_saveptr);
+    }
+    request->param_kv_count = param_kv_count;
+    return 0;
 }

@@ -26,7 +26,7 @@ void showMessage(char *message, unsigned int size)
     {
         putchar(message[i]);
     }
-    printf("\n\n");
+    printf("\r\n");
 }
 
 /**
@@ -73,7 +73,7 @@ int httpServer(int sock, Route *routes, int routes_count)
         for (int i = 0; i < routes_count; i++)
         {
             if ((strcmp(request.method, routes[i].method) == 0) &&
-                (strcmp(request.target, routes[i].path) == 0) &&
+                isPathMatch(&request.target, routes[i].path) &&
                 (strcmp(routes[i].content_type, "text/html") == 0 || strcmp(routes[i].content_type, "text/plain") == 0))
             {
                 matched_route = i;
@@ -102,8 +102,13 @@ int httpServer(int sock, Route *routes, int routes_count)
                 response.status = 200;
                 response.body_size = strlen(response.body);
             }
+
+            // NOTE: content_typeを格納
             strncpy(response.content_type, routes[matched_route].content_type, sizeof(response.content_type) - 1);
             response.content_type[sizeof(response.content_type) - 1] = '\0';
+
+            // NOTE: request_paramを格納
+            parseRequestURL(routes[matched_route].path, &request);
 
             // NOTE: routeで登録したハンドラーを実行
             if (routes[matched_route].handler != NULL)
