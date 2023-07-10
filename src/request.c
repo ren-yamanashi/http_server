@@ -201,7 +201,8 @@ int parseRequestURL(const char *route_path, HttpRequest *request)
     {
         if (route_token[0] == ':')
         {
-            strncpy(request->param_kv[param_kv_count].key, route_token, sizeof(request->param_kv[param_kv_count].key) - 1);
+            // NOTE: `:`は不要なので、2文字目以降を格納
+            strncpy(request->param_kv[param_kv_count].key, &route_token[1], sizeof(request->param_kv[param_kv_count].key) - 1);
             strncpy(request->param_kv[param_kv_count].value, request_token, sizeof(request->param_kv[param_kv_count].value) - 1);
             param_kv_count++;
         }
