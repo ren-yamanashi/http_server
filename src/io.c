@@ -96,7 +96,7 @@ int parseJson(char *json, KeyValue *key_value, int pairs_count)
  * @param file_path リクエストターゲットに対するファイルへのパス
  * @return ステータスコード (ファイルがない場合は404)
  */
-int readFile(char *body, char *file_path)
+int readFile(char *body, const char *file_path)
 {
     FILE *file;
     int file_size, DATA_BLOCK_SIZE_FOR_READ = 1;

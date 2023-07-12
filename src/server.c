@@ -93,7 +93,7 @@ int httpServer(int sock, Route *routes, int routes_count)
             // NOTE: content_typeが`text/html`の場合は、ファイルを読み込む
             if (strcmp(routes[matched_route].content_type, "text/html") == 0)
             {
-                response.status = readFile(&response.body, &routes[matched_route].file_path[1]);
+                response.status = readFile(response.body, &routes[matched_route].file_path[1]);
                 response.body_size = getFileSize(&routes[matched_route].file_path[1]);
             }
             // NOTE: content_typeが`text/plain`の場合は、そのままbodyに格納
