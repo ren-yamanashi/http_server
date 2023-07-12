@@ -7,18 +7,7 @@
 #include <unistd.h>
 #include "server.h"
 #include "router.h"
-
-void requestHandler(const HttpRequest *const request, const HttpResponse *const response)
-{
-    for (int i = 0; i < request->parsed_kv_count; i++)
-    {
-        printf("Request Body: {%s: %s}\n", request->parsed_kv[i].key, request->parsed_kv[i].value);
-    }
-    for (int i = 0; i < request->param_kv_count; i++)
-    {
-        printf("Request param: {%s: %s}\n", request->param_kv[i].key, request->param_kv[i].value);
-    }
-}
+#include "main.h"
 
 int main(void)
 {
@@ -32,4 +21,16 @@ int main(void)
 
     int res = connectHttpServer(routes, sizeof(routes) / sizeof(routes[0]));
     return res;
+}
+
+void requestHandler(const HttpRequest *const request, const HttpResponse *const response)
+{
+    for (int i = 0; i < request->parsed_kv_count; i++)
+    {
+        printf("Request Body: {%s: %s}\n", request->parsed_kv[i].key, request->parsed_kv[i].value);
+    }
+    for (int i = 0; i < request->param_kv_count; i++)
+    {
+        printf("Request param: {%s: %s}\n", request->param_kv[i].key, request->param_kv[i].value);
+    }
 }
