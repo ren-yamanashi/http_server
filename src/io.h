@@ -9,5 +9,5 @@ typedef struct
 
 int parseJson(char *json, KeyValue *key_value, int pairs_count);
 unsigned int getFileSize(const char *);
-int readFile(char *body, char *file_path);
+int readFile(char *body, const char *file_path);
 #endif
