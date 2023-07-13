@@ -25,7 +25,7 @@ int main(void)
         {HTTP_METHOD_POST, "/plain", CONTENT_TYPE_PLAIN, "", "hello world!", requestHandler},
     };
 
-    // NOTE: HTTPサーバーに接続してエラーを確認します
+    // NOTE: HTTPサーバーに接続してエラーを確認
     int res = connectHttpServer(routes, sizeof(routes) / sizeof(routes[0]));
     if (res < 0)
     {

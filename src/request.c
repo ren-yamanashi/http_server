@@ -6,6 +6,9 @@
 #include "request.h"
 #include "io.h"
 
+// NOTE: 受信時、送信時の動作の詳細設定: 今回は特別なフラグを設定しないので`0`とする
+#define RECV_FLAG 0
+
 /**
  * リクエストメッセージを受信する
  * @param sock 接続済みのソケット
@@ -15,16 +18,17 @@
  */
 int recvRequestMessage(int sock, char *request_message, unsigned int buf_size)
 {
-    // NOTE: 受信時、送信時の動作の詳細設定: 今回は特別なフラグを設定しないので`0`とする
-    int RECV_FLAG = 0;
-    int recv_size;
 
     // NOTE: リクエストを受信
-    recv_size = recv(sock, request_message, buf_size, RECV_FLAG);
+    int recv_size = recv(sock, request_message, buf_size, RECV_FLAG);
+    if (recv_size < 0)
+    {
+        perror("Failed to receive request message");
+        return -1;
+    }
 
-    // バッファの現在の終端をNULL文字で終了
+    // NOTE: バッファの現在の終端をNULL文字で終了
     request_message[recv_size] = '\0';
-
     return recv_size;
 }
 
