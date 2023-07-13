@@ -1,6 +1,10 @@
 #ifndef _REQUEST_H
 #define _REQUEST_H
 #include "io.h"
+
+// NOTE: 受信時、送信時の動作の詳細設定: 今回は特別なフラグを設定しないので`0`とする
+#define RECV_FLAG 0
+
 typedef struct
 {
     char method[32];
@@ -19,4 +23,5 @@ int recvRequestMessage(int, char *, unsigned int);
 int parseRequestBody(HttpRequest *request);
 int isPathMatch(const char *request_path, const char *route_path);
 int parseRequestURL(const char *route_path, HttpRequest *request);
+
 #endif

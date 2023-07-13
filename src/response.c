@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "response.h"
+#include "constance.h"
 
 /**
  * ステータスに応じたメッセージを取得
@@ -15,9 +16,9 @@ char *getStatusMessage(int status)
 {
     switch (status)
     {
-    case HTTP_OK:
+    case HTTP_STATUS_OK:
         return HTTP_OK_MESSAGE;
-    case HTTP_NOT_FOUND:
+    case HTTP_STATUS_NOT_FOUND:
         return HTTP_NOT_FOUND_MESSAGE;
     default:
         printf("Not support status(%d)\\n", status);

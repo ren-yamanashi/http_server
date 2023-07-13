@@ -3,8 +3,6 @@
 
 #define SIZE (5 * 1024)
 #define DATA_BLOCK_SIZE_FOR_READ 1
-#define HTTP_STATUS_OK 200
-#define HTTP_STATUS_NOT_FOUND 404
 
 typedef struct
 {

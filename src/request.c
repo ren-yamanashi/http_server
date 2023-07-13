@@ -5,9 +5,7 @@
 #include <unistd.h>
 #include "request.h"
 #include "io.h"
-
-// NOTE: 受信時、送信時の動作の詳細設定: 今回は特別なフラグを設定しないので`0`とする
-#define RECV_FLAG 0
+#include "helper.h"
 
 /**
  * リクエストメッセージを受信する
@@ -23,7 +21,7 @@ int recvRequestMessage(int sock, char *request_message, unsigned int buf_size)
     int recv_size = recv(sock, request_message, buf_size, RECV_FLAG);
     if (recv_size < 0)
     {
-        perror("Failed to receive request message");
+        perror("Error: Failed to receive request message");
         return -1;
     }
 
@@ -96,8 +94,7 @@ int parseRequestMessage(char *request_message, HttpRequest *request)
             // NOTE: コンテンツタイプを取得
             // NOTE: `:`の後のスペースをスキップ
             header_value++;
-            strncpy(request->content_type, header_value, sizeof(request->content_type) - 1);
-            request->content_type[sizeof(request->content_type) - 1] = '\0';
+            copyStringSafely(request->content_type, header_value, sizeof(request->content_type));
         }
 
         // NOTE: 行の取得を繰り返す

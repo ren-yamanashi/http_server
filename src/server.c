@@ -10,10 +10,7 @@
 #include "request.h"
 #include "router.h"
 #include "io.h"
-
-#define SIZE (5 * 1024)
-#define SERVER_ADDR "127.0.0.1"
-#define SERVER_PORT 8080
+#include "helper.h"
 
 /**
  * 受信した文字列を表示
@@ -99,15 +96,13 @@ int httpServer(int sock, Route *routes, int routes_count)
             // NOTE: content_typeが`text/plain`の場合は、そのままbodyに格納
             else
             {
-                strncpy(response.body, routes[matched_route].message, sizeof(response.body) - 1);
-                response.body[sizeof(response.body) - 1] = '\0';
+                copyStringSafely(response.body, routes[matched_route].message, sizeof(response.body));
                 response.status = 200;
                 response.body_size = strlen(response.body);
             }
 
             // NOTE: content_typeを格納
-            strncpy(response.content_type, routes[matched_route].content_type, sizeof(response.content_type) - 1);
-            response.content_type[sizeof(response.content_type) - 1] = '\0';
+            copyStringSafely(response.content_type, routes[matched_route].content_type, sizeof(response.content_type));
 
             // NOTE: request_paramを格納
             parseRequestURL(routes[matched_route].path, &request);

@@ -1,0 +1,13 @@
+#ifndef _CONSTANCE_H
+#define _CONSTANCE_H
+
+#define SERVER_ADDR "127.0.0.1"
+#define SERVER_PORT 8080
+
+#define HTTP_STATUS_OK 200
+#define HTTP_STATUS_NOT_FOUND 404
+#define HTTP_OK_MESSAGE "OK"
+#define HTTP_NOT_FOUND_MESSAGE "Not Found"
+#define HTTP_VERSION "HTTP/1.1"
+
+#endif

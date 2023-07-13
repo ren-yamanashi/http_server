@@ -5,6 +5,7 @@
 #include <errno.h>
 #include "io.h"
 #include "helper.h"
+#include "constance.h"
 
 /**
  * ファイルサイズの取得
