@@ -10,6 +10,7 @@ typedef struct
     char body[1024];
 } HttpResponse;
 
+char *getStatusMessage(int status);
 int createResponseMessage(char *response_message, char *header, HttpResponse *response);
 int sendResponseMessage(int, char *, unsigned int);
 
