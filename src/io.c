@@ -1,15 +1,14 @@
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <errno.h>
 #include "io.h"
+#include "helper.h"
 
-#define SIZE (5 * 1024)
 /**
  * ファイルサイズの取得
- * @param path ファイルパスを指す文字列
+ * @param path - ファイルパスを指す文字列
  * @return pathを元に読み込んだファイルのサイズ
  */
 unsigned int getFileSize(const char *path)
@@ -22,6 +21,7 @@ unsigned int getFileSize(const char *path)
     f = fopen(path, "rb");
     if (f == NULL)
     {
+        printf("Error opening file: %s, error: %s\n", path, strerror(errno));
         return 0;
     }
 
@@ -40,16 +40,16 @@ unsigned int getFileSize(const char *path)
 
 /**
  * JSONを解析
- * @param json 対象のjson
- * @param key_value JsonPair構造体のアドレス この構造体に解析した値が格納される
- * @param pairs_count `key:value`のペアを最大いくつ生成するか
+ * @param json - 対象のjson
+ * @param key_value - JsonPair構造体のアドレス この構造体に解析した値が格納される
+ * @param pairs_count - `key:value`のペアを最大いくつ生成するか
  * @return 解析したペアの数
  */
 int parseJson(char *json, KeyValue *key_value, int pairs_count)
 {
-    char *key, *value;
     // NOTE: 引数jsonに渡された文字列を `{` , `}` , `:` , ` ` のいずれかで分割
     char *token = strtok(json, "{},: ");
+    char *key, *value;
     int i = 0;
 
     while (token != NULL && i < pairs_count)
@@ -70,14 +70,12 @@ int parseJson(char *json, KeyValue *key_value, int pairs_count)
         }
 
         // NOTE: `key`の値をpairsのkeyに格納
-        strncpy(key_value[i].key, key, sizeof(key_value[i].key) - 1);
-        key_value[i].key[sizeof(key_value[i].key) - 1] = '\0';
+        copyStringSafely(key_value[i].key, key, sizeof(key_value[i].key));
 
         if (value != NULL)
         {
             // NOTE: `value`の値をpairsのvalueに格納
-            strncpy(key_value[i].value, value, sizeof(key_value[i].value) - 1);
-            key_value[i].value[sizeof(key_value[i].value) - 1] = '\0';
+            copyStringSafely(key_value[i].value, value, sizeof(key_value[i].value));
         }
         else
         {
@@ -98,28 +96,26 @@ int parseJson(char *json, KeyValue *key_value, int pairs_count)
  */
 int readFile(char *body, const char *file_path)
 {
-    FILE *file;
-    int file_size, DATA_BLOCK_SIZE_FOR_READ = 1;
-
     // NOTE: ファイルサイズを取得
-    file_size = getFileSize(file_path);
+    int file_size = getFileSize(file_path);
     if (file_size == 0)
     {
         // NOTE: ファイルサイズが0やファイルが存在しない場合は404を返す
-        printf("getFileSize error\n");
-        return 404;
+        printf("Error get file size: %s\n", file_path);
+        return HTTP_STATUS_NOT_FOUND;
     }
 
     // NOTE: ファイルを読み込み
-    file = fopen(file_path, "rb");
+    FILE *file = fopen(file_path, "rb");
     if (file == NULL)
     {
-        printf("Error opening file: %s\n", file_path);
-        return 404;
+        printf("Error opening file: %s, error: %s\n", file_path, strerror(errno));
+        return HTTP_STATUS_NOT_FOUND;
     }
+
     // NOTE: ファイルを読み込んで、bodyに格納
     fread(body, DATA_BLOCK_SIZE_FOR_READ, file_size, file);
     fclose(file);
 
-    return 200;
+    return HTTP_STATUS_OK;
 }

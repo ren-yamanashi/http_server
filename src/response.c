@@ -6,14 +6,6 @@
 #include <unistd.h>
 #include "response.h"
 
-// NOTE: 受信時、送信時の動作の詳細設定: 今回は特別なフラグを設定しないので`0`とする
-#define SEND_FLAG 0
-#define HTTP_OK 200
-#define HTTP_NOT_FOUND 404
-#define HTTP_OK_MESSAGE "OK"
-#define HTTP_NOT_FOUND_MESSAGE "Not Found"
-#define HTTP_VERSION "HTTP/1.1"
-
 /**
  * ステータスに応じたメッセージを取得
  * @param stats - HTTPステータス
@@ -44,8 +36,6 @@ char *getStatusMessage(int status)
  */
 int createResponseMessage(char *response_message, char *header, HttpResponse *response)
 {
-    unsigned int no_body_len;
-    unsigned int body_len;
     char content_length[50];
     response_message[0] = '\0';
     header[0] = '\0';
@@ -62,8 +52,8 @@ int createResponseMessage(char *response_message, char *header, HttpResponse *re
     // NOTE: レスポンス行とヘッダーフィールドの文字列を作成
     sprintf(response_message, "%s %d %s\r\n%s\r\n", HTTP_VERSION, response->status, status_message, header);
 
-    no_body_len = strlen(response_message);
-    body_len = response->body_size;
+    unsigned int no_body_len = strlen(response_message);
+    unsigned int body_len = response->body_size;
 
     // NOTE: ヘッダーフィールドの後ろにボディをコピー
     memcpy(&response_message[no_body_len], response->body, body_len);
