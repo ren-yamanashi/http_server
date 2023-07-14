@@ -41,7 +41,6 @@ int parseRequestLine(char *line, HttpRequest *request)
     char *req_method = strtok_r(line, " ", &header_save);
     char *req_target = strtok_r(NULL, " ", &header_save);
     char *version = strtok_r(NULL, " ", &header_save);
-    printf("req_method: %s, req_target: %s, version: %s \n", req_method, req_target, version);
     if (req_method == NULL || req_target == NULL || version == NULL)
     {
         printf("Error: Could not parse the request line\n");
@@ -52,6 +51,27 @@ int parseRequestLine(char *line, HttpRequest *request)
     strncpy(request->target, req_target, sizeof(request->target) - 1);
     strncpy(request->version, version, sizeof(request->version) - 1);
     return 0;
+}
+
+int parseRequestHeader(char *line, HttpRequest *request)
+{
+    char *header_save, *header, *header_value;
+    while (line)
+    {
+        header = strtok_r(line, ":", &header_save);
+        header_value = strtok_r(NULL, "", &header_save);
+
+        if (header && header_value && strcmp(header, "Content-Type") == 0)
+        {
+            // NOTE: コンテンツタイプを取得
+            // NOTE: `:`の後のスペースをスキップ
+            header_value++;
+            copyStringSafely(request->content_type, header_value, sizeof(request->content_type));
+        }
+
+        // NOTE: 行の取得を繰り返す
+        line = strtok_r(NULL, "\r\n", &header_save);
+    }
 }
 
 /**
@@ -75,7 +95,6 @@ int parseRequestMessage(char *request_message, HttpRequest *request)
         printf("Error: Could not find end of headers\n");
         return -1;
     }
-
     // NOTE: ヘッダー部分をnullで終了し、ボディを「\r\n\r\n」の後に開始するように設定
     *headers_end = '\0';
     char *body_start = headers_end + 4;
@@ -124,27 +143,24 @@ int parseRequestMessage(char *request_message, HttpRequest *request)
  */
 int parseRequestBody(HttpRequest *request)
 {
-
-    int parse_request = 0;
-    if (strcmp(request->content_type, "application/json") == 0)
+    // NOTE: リクエストヘッダのContent-Typeが `text/plain`,`application/json` 以外はエラー
+    if (strcmp(request->content_type, "application/json") != 0 && strcmp(request->content_type, "text/plain") != 0)
     {
-        request->parsed_kv_count = parseJson(request->body, request->parsed_kv, sizeof(request->parsed_kv) / sizeof(KeyValue));
-        if (request->parsed_kv_count < 0)
-        {
-            parse_request = -1;
-        }
-    }
-    else if (strcmp(request->content_type, "text/plain") != 0)
-    {
-        parse_request = -1;
-    }
-
-    // NOTE: 解析結果によってエラーを返す
-    if (strlen(request->body) != 0 && parse_request == -1)
-    {
-        printf("Failed to parse JSON\n");
+        printf("Error: Failed to parse request header\n");
         return -1;
-    };
+    }
+    // NOTE: リクエストヘッダのContent-Typeが `text/plain` の場合
+    if (strcmp(request->content_type, "text/plain") == 0)
+    {
+        return 0;
+    }
+    // NOTE: リクエストヘッダのContent-Typeが `application/json` の場合
+    request->parsed_kv_count = parseJson(request->body, request->parsed_kv, sizeof(request->parsed_kv) / sizeof(KeyValue));
+    if (request->parsed_kv_count < 0)
+    {
+        printf("Error: Failed to parse JSON\n");
+        return -1;
+    }
     return 0;
 }
 

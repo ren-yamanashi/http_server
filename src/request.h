@@ -25,5 +25,6 @@ int recvRequestMessage(int, char *, unsigned int);
 int parseRequestBody(HttpRequest *request);
 int isPathMatchRequestURL(const char *request_path, const char *route_path);
 int parseRequestURL(const char *route_path, HttpRequest *request);
+int parseRequestHeader(char *line, HttpRequest *request);
 
 #endif
