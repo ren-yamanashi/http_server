@@ -53,14 +53,13 @@ int parseRequestLine(char *line, HttpRequest *request)
     return 0;
 }
 
-int parseRequestHeader(char *line, HttpRequest *request)
+int parseRequestHeader(char *line, char *line_save, HttpRequest *request)
 {
     char *header_save, *header, *header_value;
     while (line)
     {
         header = strtok_r(line, ":", &header_save);
         header_value = strtok_r(NULL, "", &header_save);
-
         if (header && header_value && strcmp(header, "Content-Type") == 0)
         {
             // NOTE: コンテンツタイプを取得
@@ -70,7 +69,7 @@ int parseRequestHeader(char *line, HttpRequest *request)
         }
 
         // NOTE: 行の取得を繰り返す
-        line = strtok_r(NULL, "\r\n", &header_save);
+        line = strtok_r(NULL, "\r\n", &line_save);
     }
 }
 
@@ -95,6 +94,7 @@ int parseRequestMessage(char *request_message, HttpRequest *request)
         printf("Error: Could not find end of headers\n");
         return -1;
     }
+
     // NOTE: ヘッダー部分をnullで終了し、ボディを「\r\n\r\n」の後に開始するように設定
     *headers_end = '\0';
     char *body_start = headers_end + 4;
@@ -111,23 +111,8 @@ int parseRequestMessage(char *request_message, HttpRequest *request)
     parseRequestLine(line, request);
     // NOTE: 続く行を取得
     line = strtok_r(NULL, "\r\n", &line_save);
-
-    while (line)
-    {
-        header = strtok_r(line, ":", &header_save);
-        header_value = strtok_r(NULL, "", &header_save);
-        if (header && header_value && strcmp(header, "Content-Type") == 0)
-        {
-            // NOTE: コンテンツタイプを取得
-            // NOTE: `:`の後のスペースをスキップ
-            header_value++;
-            copyStringSafely(request->content_type, header_value, sizeof(request->content_type));
-        }
-
-        // NOTE: 行の取得を繰り返す
-        line = strtok_r(NULL, "\r\n", &line_save);
-    }
-
+    // NOTE: リクエストヘッダの解析
+    parseRequestHeader(line, line_save, request);
     // NOTE: ボディの取得
     snprintf(request->body, sizeof(request->body), "%s", body_start);
     // NOTE: リクエストボディの解析
