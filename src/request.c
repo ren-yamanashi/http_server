@@ -16,7 +16,6 @@
  */
 int recvRequestMessage(int sock, char *request_message, unsigned int buf_size)
 {
-
     // NOTE: リクエストを受信
     int recv_size = recv(sock, request_message, buf_size, RECV_FLAG);
     if (recv_size < 0)
@@ -24,10 +23,35 @@ int recvRequestMessage(int sock, char *request_message, unsigned int buf_size)
         perror("Error: Failed to receive request message");
         return -1;
     }
-
     // NOTE: バッファの現在の終端をNULL文字で終了
     request_message[recv_size] = '\0';
     return recv_size;
+}
+
+/**
+ * リクエストラインを解析
+ * @param line リクエストメッセージの1行目
+ * @param request Request構造体のアドレス
+ * @return 成功した場合は0 それ以外は1
+ */
+int parseRequestLine(char *line, HttpRequest *request)
+{
+    char *header_save;
+    // NOTE: 1行目の情報を取得
+    char *req_method = strtok_r(line, " ", &header_save);
+    char *req_target = strtok_r(NULL, " ", &header_save);
+    char *version = strtok_r(NULL, " ", &header_save);
+    printf("req_method: %s, req_target: %s, version: %s \n", req_method, req_target, version);
+    if (req_method == NULL || req_target == NULL || version == NULL)
+    {
+        printf("Error: Could not parse the request line\n");
+        return -1;
+    }
+    // NOTE: 1行目の情報を構造体に格納
+    strncpy(request->method, req_method, sizeof(request->method) - 1);
+    strncpy(request->target, req_target, sizeof(request->target) - 1);
+    strncpy(request->version, version, sizeof(request->version) - 1);
+    return 0;
 }
 
 /**
@@ -46,42 +70,26 @@ int parseRequestMessage(char *request_message, HttpRequest *request)
 
     // NOTE: ヘッダーとボディを分離
     char *headers_end = strstr(request_message, "\r\n\r\n");
-
     if (!headers_end)
     {
-        printf("Could not find end of headers\n");
+        printf("Error: Could not find end of headers\n");
         return -1;
     }
 
-    // ヘッダー部分をnullで終了し、ボディを「\r\n\r\n」の後に開始するように設定
+    // NOTE: ヘッダー部分をnullで終了し、ボディを「\r\n\r\n」の後に開始するように設定
     *headers_end = '\0';
     char *body_start = headers_end + 4;
 
     // NOTE: リクエストメッセージの1行目を取得
     line = strtok_r(request_message, "\r\n", &line_save);
-
     if (line == NULL)
     {
-        printf("Could not get request\n");
+        printf("Error: Could not get request\n");
         return -1;
     }
 
-    // NOTE: 1行目の情報を取得
-    req_method = strtok_r(line, " ", &header_save);
-    req_target = strtok_r(NULL, " ", &header_save);
-    version = strtok_r(NULL, " ", &header_save);
-
-    if (req_method == NULL || req_target == NULL || version == NULL)
-    {
-        printf("Could not parse the request line\n");
-        return -1;
-    }
-
-    // NOTE: 1行目の情報を構造体に格納
-    strncpy(request->method, req_method, sizeof(request->method) - 1);
-    strncpy(request->target, req_target, sizeof(request->target) - 1);
-    strncpy(request->version, version, sizeof(request->version) - 1);
-
+    // NOTE: 1行目の情報を解析
+    parseRequestLine(line, request);
     // NOTE: 続く行を取得
     line = strtok_r(NULL, "\r\n", &line_save);
 
@@ -113,7 +121,6 @@ int parseRequestMessage(char *request_message, HttpRequest *request)
  * plainTextの場合は、何もしない
  * @param request HttpRequest構造体のアドレス
  * @return 成功した場合は0 それ以外は-1
- *
  */
 int parseRequestBody(HttpRequest *request)
 {
@@ -147,7 +154,7 @@ int parseRequestBody(HttpRequest *request)
  * @param route_path ルートのパスを示すアドレス
  * @return 一致した場合は1 そうでない場合は0
  */
-int isPathMatch(const char *request_url, const char *route_path)
+int isPathMatchRequestURL(const char *request_url, const char *route_path)
 {
     char route_copy[1024];
     char request_copy[1024];

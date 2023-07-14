@@ -19,10 +19,11 @@ typedef struct
     unsigned int parsed_kv_count;
 } HttpRequest;
 
+int parseRequestLine(char *line, HttpRequest *request);
 int parseRequestMessage(char *input, HttpRequest *request);
 int recvRequestMessage(int, char *, unsigned int);
 int parseRequestBody(HttpRequest *request);
-int isPathMatch(const char *request_path, const char *route_path);
+int isPathMatchRequestURL(const char *request_path, const char *route_path);
 int parseRequestURL(const char *route_path, HttpRequest *request);
 
 #endif

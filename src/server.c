@@ -72,7 +72,7 @@ int httpServer(int sock, Route *routes, int routes_count)
         for (int i = 0; i < routes_count; i++)
         {
             if ((strcmp(request.method, routes[i].method) == 0) &&
-                isPathMatch(&request.target, routes[i].path) &&
+                isPathMatchRequestURL(&request.target, routes[i].path) &&
                 (strcmp(routes[i].content_type, "text/html") == 0 || strcmp(routes[i].content_type, "text/plain") == 0))
             {
                 matched_route = i;
