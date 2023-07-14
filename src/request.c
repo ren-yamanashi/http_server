@@ -103,14 +103,8 @@ int parseRequestMessage(char *request_message, HttpRequest *request)
 
     // NOTE: ボディの取得
     snprintf(request->body, sizeof(request->body), "%s", body_start);
-
-    if (strlen(request->body) != 0 && parseRequestBody(request) == -1)
-    {
-        printf("Failed to parse JSON\n");
-        return -1;
-    };
-
-    return 0;
+    // NOTE: リクエストボディの解析
+    return parseRequestBody(request);
 }
 
 /**
@@ -124,23 +118,27 @@ int parseRequestMessage(char *request_message, HttpRequest *request)
 int parseRequestBody(HttpRequest *request)
 {
 
+    int parse_request = 0;
     if (strcmp(request->content_type, "application/json") == 0)
     {
         request->parsed_kv_count = parseJson(request->body, request->parsed_kv, sizeof(request->parsed_kv) / sizeof(KeyValue));
         if (request->parsed_kv_count < 0)
         {
-            return -1;
+            parse_request = -1;
         }
-        return 0;
     }
-    else if (strcmp(request->content_type, "text/plain") == 0)
+    else if (strcmp(request->content_type, "text/plain") != 0)
     {
-        return 0;
+        parse_request = -1;
     }
-    else
+
+    // NOTE: 解析結果によってエラーを返す
+    if (strlen(request->body) != 0 && parse_request == -1)
     {
+        printf("Failed to parse JSON\n");
         return -1;
-    }
+    };
+    return 0;
 }
 
 /**
@@ -151,15 +149,14 @@ int parseRequestBody(HttpRequest *request)
  */
 int isPathMatch(const char *request_url, const char *route_path)
 {
-    const char *delim = "/";
     char route_copy[1024];
     char request_copy[1024];
     char *route_saveptr;
     char *request_saveptr;
     strcpy(route_copy, route_path);
     strcpy(request_copy, request_url);
-    char *route_token = strtok_r(route_copy, delim, &route_saveptr);
-    char *request_token = strtok_r(request_copy, delim, &request_saveptr);
+    char *route_token = strtok_r(route_copy, DELIM, &route_saveptr);
+    char *request_token = strtok_r(request_copy, DELIM, &request_saveptr);
 
     while (route_token != NULL && request_token != NULL)
     {
@@ -167,8 +164,8 @@ int isPathMatch(const char *request_url, const char *route_path)
         {
             return 0;
         }
-        route_token = strtok_r(NULL, delim, &route_saveptr);
-        request_token = strtok_r(NULL, delim, &request_saveptr);
+        route_token = strtok_r(NULL, DELIM, &route_saveptr);
+        request_token = strtok_r(NULL, DELIM, &request_saveptr);
     }
 
     if (route_token != NULL || request_token != NULL)
@@ -187,15 +184,14 @@ int isPathMatch(const char *request_url, const char *route_path)
  */
 int parseRequestURL(const char *route_path, HttpRequest *request)
 {
-    const char *delim = "/";
     char route_copy[1024];
     char request_copy[1024];
     char *route_saveptr;
     char *request_saveptr;
     strcpy(route_copy, route_path);
     strcpy(request_copy, request->target);
-    char *route_token = strtok_r(route_copy, delim, &route_saveptr);
-    char *request_token = strtok_r(request_copy, delim, &request_saveptr);
+    char *route_token = strtok_r(route_copy, DELIM, &route_saveptr);
+    char *request_token = strtok_r(request_copy, DELIM, &request_saveptr);
     int param_kv_count = 0;
 
     while (route_token != NULL && request_token != NULL)
@@ -203,12 +199,12 @@ int parseRequestURL(const char *route_path, HttpRequest *request)
         if (route_token[0] == ':')
         {
             // NOTE: `:`は不要なので、2文字目以降を格納
-            strncpy(request->param_kv[param_kv_count].key, &route_token[1], sizeof(request->param_kv[param_kv_count].key) - 1);
-            strncpy(request->param_kv[param_kv_count].value, request_token, sizeof(request->param_kv[param_kv_count].value) - 1);
+            copyStringSafely(request->param_kv[param_kv_count].key, &route_token[1], sizeof(request->param_kv[param_kv_count].key));
+            copyStringSafely(request->param_kv[param_kv_count].value, request_token, sizeof(request->param_kv[param_kv_count].value));
             param_kv_count++;
         }
-        route_token = strtok_r(NULL, delim, &route_saveptr);
-        request_token = strtok_r(NULL, delim, &request_saveptr);
+        route_token = strtok_r(NULL, DELIM, &route_saveptr);
+        request_token = strtok_r(NULL, DELIM, &request_saveptr);
     }
     request->param_kv_count = param_kv_count;
     return 0;
