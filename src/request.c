@@ -31,7 +31,7 @@ int recvRequestMessage(int sock, char *request_message, unsigned int buf_size)
 /**
  * リクエストラインを解析
  * @param line リクエストメッセージの1行目
- * @param request Request構造体のアドレス
+ * @param request HttpRequest構造体のアドレス
  * @return 成功した場合は0 それ以外は1
  */
 int parseRequestLine(char *line, HttpRequest *request)
@@ -53,7 +53,15 @@ int parseRequestLine(char *line, HttpRequest *request)
     return 0;
 }
 
-int parseRequestHeader(char *line, char *line_save, HttpRequest *request)
+/**
+ * リクエストヘッダを解析
+ * 特定の文字列を見つけて、それに該当する処理を行う
+ * @param line リクエストメッセージの行
+ * @param line_save
+ * @param request HttpRequest構造体のアドレス
+ * @return 
+ */
+void parseRequestHeader(char *line, char *line_save, HttpRequest *request)
 {
     char *header_save, *header, *header_value;
     while (line)
@@ -107,15 +115,10 @@ int parseRequestMessage(char *request_message, HttpRequest *request)
         return -1;
     }
 
-    // NOTE: 1行目の情報を解析
     parseRequestLine(line, request);
-    // NOTE: 続く行を取得
     line = strtok_r(NULL, "\r\n", &line_save);
-    // NOTE: リクエストヘッダの解析
     parseRequestHeader(line, line_save, request);
-    // NOTE: ボディの取得
     snprintf(request->body, sizeof(request->body), "%s", body_start);
-    // NOTE: リクエストボディの解析
     return parseRequestBody(request);
 }
 
