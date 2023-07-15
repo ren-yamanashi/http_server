@@ -18,3 +18,12 @@ int isError(int target)
     }
     return 0;
 }
+
+int isMatchStr(const char *str1, const char *str2)
+{
+    if (strcmp(str1, str2) == 0)
+    {
+        return 1;
+    }
+    return 0;
+}
