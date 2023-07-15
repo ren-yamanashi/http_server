@@ -87,25 +87,35 @@ void parseRequestHeader(char *line, char *line_save, HttpRequest *request)
  * @param request HttpRequestの構造体
  * @return 成功したかのフラグ 成功時に0、エラー時に-1を返す
  */
-int parseRequestMessage(char *request_message, HttpRequest *request)
+char *splitRequestHeaderAndBody(char *request_message)
 {
-    char *line, *line_save;
-    char *header, *header_save, *header_value;
-    char *req_method = NULL;
-    char *req_target = NULL;
-    char *version = NULL;
-
-    // NOTE: ヘッダーとボディを分離
     char *headers_end = strstr(request_message, "\r\n\r\n");
     if (!headers_end)
     {
         printf("Error: Could not find end of headers\n");
+        return NULL;
+    }
+    // NOTE: ヘッダー部分をnullで終了し、ボディを「\r\n\r\n」の後に開始するように設定
+    *headers_end = "\0";
+    return headers_end + 4;
+}
+
+/**
+ * リクエストメッセージを解析する
+ * @param request_message 解析するリクエストメッセージが格納されたバッファへのアドレス
+ * @param request HttpRequestの構造体
+ * @return 成功したかのフラグ 成功時に0、エラー時に-1を返す
+ */
+int parseRequestMessage(char *request_message, HttpRequest *request)
+{
+    char *line, *line_save;
+
+    // NOTE: ヘッダーとボディを分離
+    char *body_start = splitRequestHeaderAndBody(request_message);
+    if (body_start == NULL)
+    {
         return -1;
     }
-
-    // NOTE: ヘッダー部分をnullで終了し、ボディを「\r\n\r\n」の後に開始するように設定
-    *headers_end = '\0';
-    char *body_start = headers_end + 4;
 
     // NOTE: リクエストメッセージの1行目を取得
     line = strtok_r(request_message, "\r\n", &line_save);
@@ -162,7 +172,7 @@ int parseRequestBody(HttpRequest *request)
  * @param route_path ルートのパスを示すアドレス
  * @return 一致した場合は1 そうでない場合は0
  */
-int isPathMatchRequestURL(const char *request_url, const char *route_path)
+int isPathAndURLMatch(const char *request_url, const char *route_path)
 {
     char route_copy[1024];
     char request_copy[1024];
@@ -197,7 +207,7 @@ int isPathMatchRequestURL(const char *request_url, const char *route_path)
  * @param route_path routeで指定したpathを示すアドレス
  * @return
  */
-int parseRequestURL(const char *route_path, HttpRequest *request)
+int extractRequestParams(const char *route_path, HttpRequest *request)
 {
     char route_copy[1024];
     char request_copy[1024];

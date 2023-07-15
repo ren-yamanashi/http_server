@@ -72,7 +72,7 @@ int httpServer(int sock, Route *routes, int routes_count)
         for (int i = 0; i < routes_count; i++)
         {
             if ((strcmp(request.method, routes[i].method) == 0) &&
-                isPathMatchRequestURL(&request.target, routes[i].path) &&
+                isPathAndURLMatch(&request.target, routes[i].path) &&
                 (strcmp(routes[i].content_type, "text/html") == 0 || strcmp(routes[i].content_type, "text/plain") == 0))
             {
                 matched_route = i;
@@ -105,7 +105,7 @@ int httpServer(int sock, Route *routes, int routes_count)
             copyStringSafely(response.content_type, routes[matched_route].content_type, sizeof(response.content_type));
 
             // NOTE: request_paramを格納
-            parseRequestURL(routes[matched_route].path, &request);
+            extractRequestParams(routes[matched_route].path, &request);
 
             // NOTE: routeで登録したハンドラーを実行
             if (routes[matched_route].handler != NULL)
