@@ -5,77 +5,61 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "response.h"
+#include "constance.h"
+
+/**
+ * ステータスに応じたメッセージを取得
+ * @param stats - HTTPステータス
+ * @return メッセージ
+ */
+char *getStatusMessage(int status)
+{
+    switch (status)
+    {
+    case HTTP_STATUS_OK:
+        return HTTP_OK_MESSAGE;
+    case HTTP_STATUS_NOT_FOUND:
+        return HTTP_NOT_FOUND_MESSAGE;
+    case HTTP_STATUS_ERROR:
+        return HTTP_SERVER_ERROR;
+    default:
+        printf("Error: Not support status(%d)\\n", status);
+        return NULL;
+    }
+}
 
 /**
  * レスポンスメッセージを作成する
- * @param response_message レスポンスメッセージを格納するバッファへのアドレス
- * @param status ステータスコード
- * @param header ヘッダーフィールドを格納したバッファへのアドレス
- * @param body ボディを格納したバッファへのアドレス
- * @param body_size ボディのサイズ
+ * @param response_message - レスポンスメッセージを格納するバッファへのアドレス
+ * @param status - ステータスコード
+ * @param header - ヘッダーフィールドを格納したバッファへのアドレス
+ * @param body - ボディを格納したバッファへのアドレス
+ * @param body_size - ボディのサイズ
  * @return レスポンスメッセージのデータサイズ(バイト長)
  */
 int createResponseMessage(char *response_message, char *header, HttpResponse *response)
 {
-    unsigned int no_body_len;
-    unsigned int body_len;
     char content_length[50];
     response_message[0] = '\0';
     header[0] = '\0';
 
     sprintf(content_length, "Content-Length: %u\r\nContent-Type: %s\r\n", response->body_size, response->content_type);
     strcat(header, content_length);
-    if (response->status == 200)
-    {
-        // NOTE: レスポンス行とヘッダーフィールドの文字列を作成
-        sprintf(response_message, "HTTP/1.1 200 OK\r\n%s\r\n", header);
 
-        no_body_len = strlen(response_message);
-        body_len = response->body_size;
-
-        // NOTE: ヘッダーフィールドの後ろにボディをコピー
-        memcpy(&response_message[no_body_len], response->body, body_len);
-    }
-    else if (response->status == 404)
+    char *status_message = getStatusMessage(response->status);
+    if (status_message == NULL)
     {
-        // NOTE: レスポンス行とヘッダーフィールドの文字列を作成
-        sprintf(response_message, "HTTP/1.1 404 Not Found\r\n%s\r\n", header);
+        return ERROR_FLAG;
+    }
 
-        no_body_len = strlen(response_message);
-        body_len = 0;
-    }
-    else
-    {
-        // NOTE: statusコードをプログラムがサポートしていない場合
-        printf("Not support status(%d)\n", response->status);
-        return -1;
-    }
+    // NOTE: レスポンス行とヘッダーフィールドの文字列を作成
+    sprintf(response_message, "%s %d %s\r\n%s\r\n", HTTP_VERSION, response->status, status_message, header);
+
+    unsigned int no_body_len = strlen(response_message);
+    unsigned int body_len = response->body_size;
+
+    // NOTE: ヘッダーフィールドの後ろにボディをコピー
+    memcpy(&response_message[no_body_len], response->body, body_len);
 
     return no_body_len + body_len;
-}
-
-/**
- * レスポンスメッセージを送信する
- * @param sock: 接続済みのソケット
- * @param response_message: 送信するレスポンスメッセージへのアドレス
- * @param message_size: 送信するメッセージのサイズ
- * @return 送信したデータサイズ(バイト長)
- */
-int sendResponseMessage(int sock, char *response_message, unsigned int message_size)
-{
-    // NOTE: 受信時、送信時の動作の詳細設定: 今回は特別なフラグを設定しないので`0`とする
-    int SEND_FLAG = 0;
-    int send_size;
-
-    /**
-     *  データを送信する
-     *  @param sock 接続済みのソケット
-     *  @param response_message 送信するデータへのポインタ
-     *  @param message_size 送信するデータのサイズ(バイト数)
-     *  @param SEND_FLAG 送信時の動作の詳細設定
-     *  @return 実際に接続先に送信したデータのバイト数
-     */
-    send_size = send(sock, response_message, message_size, SEND_FLAG);
-
-    return send_size;
 }

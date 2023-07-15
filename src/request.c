@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include "request.h"
 #include "io.h"
+#include "helper.h"
+#include "constance.h"
 
 /**
  * リクエストメッセージを受信する
@@ -15,17 +17,87 @@
  */
 int recvRequestMessage(int sock, char *request_message, unsigned int buf_size)
 {
-    // NOTE: 受信時、送信時の動作の詳細設定: 今回は特別なフラグを設定しないので`0`とする
-    int RECV_FLAG = 0;
-    int recv_size;
-
     // NOTE: リクエストを受信
-    recv_size = recv(sock, request_message, buf_size, RECV_FLAG);
-
-    // バッファの現在の終端をNULL文字で終了
+    int recv_size = recv(sock, request_message, buf_size, RECV_FLAG);
+    if (recv_size < 0)
+    {
+        perror("Error: Failed to receive request message");
+        return ERROR_FLAG;
+    }
+    // NOTE: バッファの現在の終端をNULL文字で終了
     request_message[recv_size] = '\0';
-
     return recv_size;
+}
+
+/**
+ * リクエストラインを解析
+ * @param line リクエストメッセージの1行目
+ * @param request HttpRequest構造体のアドレス
+ * @return 成功した場合は0 それ以外は1
+ */
+int parseRequestLine(char *line, HttpRequest *request)
+{
+    char *header_save;
+    // NOTE: 1行目の情報を取得
+    char *req_method = strtok_r(line, " ", &header_save);
+    char *req_target = strtok_r(NULL, " ", &header_save);
+    char *version = strtok_r(NULL, " ", &header_save);
+    if (req_method == NULL || req_target == NULL || version == NULL)
+    {
+        printf("Error: Could not parse the request line\n");
+        return ERROR_FLAG;
+    }
+    // NOTE: 1行目の情報を構造体に格納
+    copyStringSafely(request->method, req_method, sizeof(request->method));
+    copyStringSafely(request->target, req_target, sizeof(request->target));
+    copyStringSafely(request->version, version, sizeof(request->version));
+    return SUCCESS_FLAG;
+}
+
+/**
+ * リクエストヘッダを解析
+ * 特定の文字列を見つけて、それに該当する処理を行う
+ * @param line リクエストメッセージの行
+ * @param line_save
+ * @param request HttpRequest構造体のアドレス
+ * @return
+ */
+void parseRequestHeader(char *line, char *line_save, HttpRequest *request)
+{
+    char *header_save, *header, *header_value;
+    while (line)
+    {
+        header = strtok_r(line, ":", &header_save);
+        header_value = strtok_r(NULL, "", &header_save);
+        if (header && header_value && strcmp(header, "Content-Type") == 0)
+        {
+            // NOTE: コンテンツタイプを取得
+            // NOTE: `:`の後のスペースをスキップ
+            header_value++;
+            copyStringSafely(request->content_type, header_value, sizeof(request->content_type));
+        }
+        // NOTE: 行の取得を繰り返す
+        line = strtok_r(NULL, "\r\n", &line_save);
+    }
+}
+
+/**
+ * リクエストメッセージを解析する
+ * @param request_message 解析するリクエストメッセージが格納されたバッファへのアドレス
+ * @param request HttpRequestの構造体
+ * @return 成功したかのフラグ 成功時に0、エラー時に-1を返す
+ */
+char *splitRequestHeaderAndBody(char *request_message)
+{
+    char *headers_end = strstr(request_message, "\r\n\r\n");
+    if (!headers_end)
+    {
+        printf("Error: Could not find end of headers\n");
+        return NULL;
+    }
+    // NOTE: ヘッダー部分をnullで終了し、ボディを「\r\n\r\n」の後に開始するように設定
+    *headers_end = "\0";
+    return headers_end + 4;
 }
 
 /**
@@ -37,79 +109,29 @@ int recvRequestMessage(int sock, char *request_message, unsigned int buf_size)
 int parseRequestMessage(char *request_message, HttpRequest *request)
 {
     char *line, *line_save;
-    char *header, *header_save, *header_value;
-    char *req_method = NULL;
-    char *req_target = NULL;
-    char *version = NULL;
+    char request_message_copy[SIZE];
+    snprintf(request_message_copy, sizeof(request_message_copy), "%s", request_message);
 
     // NOTE: ヘッダーとボディを分離
-    char *headers_end = strstr(request_message, "\r\n\r\n");
-
-    if (!headers_end)
+    char *body_start = splitRequestHeaderAndBody(request_message);
+    if (body_start == NULL)
     {
-        printf("Could not find end of headers\n");
-        return -1;
+        printf("Error: Could not get request\n");
+        return ERROR_FLAG;
     }
-
-    // ヘッダー部分をnullで終了し、ボディを「\r\n\r\n」の後に開始するように設定
-    *headers_end = '\0';
-    char *body_start = headers_end + 4;
-
     // NOTE: リクエストメッセージの1行目を取得
-    line = strtok_r(request_message, "\r\n", &line_save);
-
+    line = strtok_r(request_message_copy, "\r\n", &line_save);
     if (line == NULL)
     {
-        printf("Could not get request\n");
-        return -1;
+        printf("Error: Could not get request line\n");
+        return ERROR_FLAG;
     }
 
-    // NOTE: 1行目の情報を取得
-    req_method = strtok_r(line, " ", &header_save);
-    req_target = strtok_r(NULL, " ", &header_save);
-    version = strtok_r(NULL, " ", &header_save);
-
-    if (req_method == NULL || req_target == NULL || version == NULL)
-    {
-        printf("Could not parse the request line\n");
-        return -1;
-    }
-
-    // NOTE: 1行目の情報を構造体に格納
-    strncpy(request->method, req_method, sizeof(request->method) - 1);
-    strncpy(request->target, req_target, sizeof(request->target) - 1);
-    strncpy(request->version, version, sizeof(request->version) - 1);
-
-    // NOTE: 続く行を取得
+    parseRequestLine(line, request);
     line = strtok_r(NULL, "\r\n", &line_save);
-
-    while (line)
-    {
-        header = strtok_r(line, ":", &header_save);
-        header_value = strtok_r(NULL, "", &header_save);
-        if (header && header_value && strcmp(header, "Content-Type") == 0)
-        {
-            // NOTE: コンテンツタイプを取得
-            // NOTE: `:`の後のスペースをスキップ
-            header_value++;
-            strncpy(request->content_type, header_value, sizeof(request->content_type) - 1);
-            request->content_type[sizeof(request->content_type) - 1] = '\0';
-        }
-
-        // NOTE: 行の取得を繰り返す
-        line = strtok_r(NULL, "\r\n", &line_save);
-    }
-
-    // NOTE: ボディの取得
+    parseRequestHeader(line, line_save, request);
     snprintf(request->body, sizeof(request->body), "%s", body_start);
-
-    if (strlen(request->body) != 0 && parseRequestBody(request) == -1)
-    {
-        printf("Failed to parse JSON\n");
-        return -1;
-    };
-
-    return 0;
+    return parseRequestBody(request);
 }
 
 /**
@@ -118,28 +140,32 @@ int parseRequestMessage(char *request_message, HttpRequest *request)
  * plainTextの場合は、何もしない
  * @param request HttpRequest構造体のアドレス
  * @return 成功した場合は0 それ以外は-1
- *
  */
 int parseRequestBody(HttpRequest *request)
 {
-
-    if (strcmp(request->content_type, "application/json") == 0)
+    if (strlen(request->content_type) == 0)
     {
-        request->parsed_kv_count = parseJson(request->body, request->parsed_kv, sizeof(request->parsed_kv) / sizeof(KeyValue));
-        if (request->parsed_kv_count < 0)
-        {
-            return -1;
-        }
-        return 0;
+        return SUCCESS_FLAG;
     }
-    else if (strcmp(request->content_type, "text/plain") == 0)
+    // NOTE: リクエストヘッダのContent-Typeが `text/plain`,`application/json` 以外はエラー
+    if (!isMatchStr(request->content_type, "application/json") && !isMatchStr(request->content_type, "text/plain"))
     {
-        return 0;
+        printf("Error: Failed to parse request header\n");
+        return ERROR_FLAG;
     }
-    else
+    // NOTE: リクエストヘッダのContent-Typeが `text/plain` の場合
+    if (isMatchStr(request->content_type, "text/plain"))
     {
-        return -1;
+        return SUCCESS_FLAG;
     }
+    // NOTE: リクエストヘッダのContent-Typeが `application/json` の場合
+    request->parsed_kv_count = parseJson(request->body, request->parsed_kv, sizeof(request->parsed_kv) / sizeof(KeyValue));
+    if (request->parsed_kv_count < 0)
+    {
+        printf("Error: Failed to parse JSON\n");
+        return ERROR_FLAG;
+    }
+    return SUCCESS_FLAG;
 }
 
 /**
@@ -148,33 +174,30 @@ int parseRequestBody(HttpRequest *request)
  * @param route_path ルートのパスを示すアドレス
  * @return 一致した場合は1 そうでない場合は0
  */
-int isPathMatch(const char *request_url, const char *route_path)
+int isPathAndURLMatch(const char *request_url, const char *route_path)
 {
-    const char *delim = "/";
     char route_copy[1024];
     char request_copy[1024];
     char *route_saveptr;
     char *request_saveptr;
     strcpy(route_copy, route_path);
     strcpy(request_copy, request_url);
-    char *route_token = strtok_r(route_copy, delim, &route_saveptr);
-    char *request_token = strtok_r(request_copy, delim, &request_saveptr);
+    char *route_token = strtok_r(route_copy, DELIM, &route_saveptr);
+    char *request_token = strtok_r(request_copy, DELIM, &request_saveptr);
 
     while (route_token != NULL && request_token != NULL)
     {
-        if (route_token[0] != ':' && strcmp(route_token, request_token) != 0)
+        if (route_token[0] != ':' && !isMatchStr(route_token, request_token))
         {
             return 0;
         }
-        route_token = strtok_r(NULL, delim, &route_saveptr);
-        request_token = strtok_r(NULL, delim, &request_saveptr);
+        route_token = strtok_r(NULL, DELIM, &route_saveptr);
+        request_token = strtok_r(NULL, DELIM, &request_saveptr);
     }
-
     if (route_token != NULL || request_token != NULL)
     {
         return 0;
     }
-
     return 1;
 }
 
@@ -182,19 +205,17 @@ int isPathMatch(const char *request_url, const char *route_path)
  * リクエストURLを解析して、urlパラメータを取得する
  * @param request HttpRequest構造体を示すアドレス
  * @param route_path routeで指定したpathを示すアドレス
- * @return
  */
-int parseRequestURL(const char *route_path, HttpRequest *request)
+void extractRequestParams(const char *route_path, HttpRequest *request)
 {
-    const char *delim = "/";
     char route_copy[1024];
     char request_copy[1024];
     char *route_saveptr;
     char *request_saveptr;
     strcpy(route_copy, route_path);
     strcpy(request_copy, request->target);
-    char *route_token = strtok_r(route_copy, delim, &route_saveptr);
-    char *request_token = strtok_r(request_copy, delim, &request_saveptr);
+    char *route_token = strtok_r(route_copy, DELIM, &route_saveptr);
+    char *request_token = strtok_r(request_copy, DELIM, &request_saveptr);
     int param_kv_count = 0;
 
     while (route_token != NULL && request_token != NULL)
@@ -202,13 +223,12 @@ int parseRequestURL(const char *route_path, HttpRequest *request)
         if (route_token[0] == ':')
         {
             // NOTE: `:`は不要なので、2文字目以降を格納
-            strncpy(request->param_kv[param_kv_count].key, &route_token[1], sizeof(request->param_kv[param_kv_count].key) - 1);
-            strncpy(request->param_kv[param_kv_count].value, request_token, sizeof(request->param_kv[param_kv_count].value) - 1);
+            copyStringSafely(request->param_kv[param_kv_count].key, &route_token[1], sizeof(request->param_kv[param_kv_count].key));
+            copyStringSafely(request->param_kv[param_kv_count].value, request_token, sizeof(request->param_kv[param_kv_count].value));
             param_kv_count++;
         }
-        route_token = strtok_r(NULL, delim, &route_saveptr);
-        request_token = strtok_r(NULL, delim, &request_saveptr);
+        route_token = strtok_r(NULL, DELIM, &route_saveptr);
+        request_token = strtok_r(NULL, DELIM, &request_saveptr);
     }
     request->param_kv_count = param_kv_count;
-    return 0;
 }
