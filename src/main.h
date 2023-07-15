@@ -5,6 +5,7 @@
 
 #define HTTP_METHOD_GET "GET"
 #define HTTP_METHOD_POST "POST"
+#define HTTP_METHOD_DELETE "DELETE"
 #define CONTENT_TYPE_HTML "text/html"
 #define CONTENT_TYPE_PLAIN "text/plain"
 

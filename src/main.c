@@ -18,7 +18,7 @@ int main(void)
         {HTTP_METHOD_GET, "/user/:id/textbook/:textbookId", CONTENT_TYPE_HTML, "/index.html", "", requestHandler},
         {HTTP_METHOD_POST, "/test", CONTENT_TYPE_HTML, "/test.html", "", requestHandler},
         {HTTP_METHOD_POST, "/plain", CONTENT_TYPE_PLAIN, "", "hello world!", requestHandler},
-    };
+        {HTTP_METHOD_DELETE, "/data/:id/delete", CONTENT_TYPE_PLAIN, "", "delete data", requestHandler}};
 
     // NOTE: HTTPサーバーに接続してエラーを確認
     int res = connectHttpServer(routes, sizeof(routes) / sizeof(routes[0]));
