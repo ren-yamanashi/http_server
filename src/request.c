@@ -59,7 +59,7 @@ int parseRequestLine(char *line, HttpRequest *request)
  * @param line リクエストメッセージの行
  * @param line_save
  * @param request HttpRequest構造体のアドレス
- * @return 
+ * @return
  */
 void parseRequestHeader(char *line, char *line_save, HttpRequest *request)
 {
@@ -131,6 +131,10 @@ int parseRequestMessage(char *request_message, HttpRequest *request)
  */
 int parseRequestBody(HttpRequest *request)
 {
+    if (strlen(request->content_type) == 0)
+    {
+        return 0;
+    }
     // NOTE: リクエストヘッダのContent-Typeが `text/plain`,`application/json` 以外はエラー
     if (strcmp(request->content_type, "application/json") != 0 && strcmp(request->content_type, "text/plain") != 0)
     {
