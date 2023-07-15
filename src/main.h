@@ -1,8 +1,7 @@
 #ifndef _MAIN_H
 #define _MAIN_H
 
-#include "server.h"
-#include "router.h"
+#include "struct.h"
 
 #define HTTP_METHOD_GET "GET"
 #define HTTP_METHOD_POST "POST"

@@ -7,6 +7,7 @@
 #include "io.h"
 #include "helper.h"
 #include "constance.h"
+#include "struct.h"
 
 /**
  * リクエストメッセージを受信する

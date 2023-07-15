@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include "response.h"
 #include "constance.h"
+#include "struct.h"
 
 /**
  * ステータスに応じたメッセージを取得

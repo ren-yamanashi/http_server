@@ -6,8 +6,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "server.h"
-#include "router.h"
 #include "main.h"
+#include "struct.h"
 
 int main(void)
 {

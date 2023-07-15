@@ -1,14 +1,9 @@
 #ifndef _IO_H
 #define _IO_H
 
-#define SIZE (5 * 1024)
-#define DATA_BLOCK_SIZE_FOR_READ 1
+#include "struct.h"
 
-typedef struct
-{
-    char key[256];
-    char value[256];
-} KeyValue;
+#define DATA_BLOCK_SIZE_FOR_READ 1
 
 int parseJson(char *json, KeyValue *key_value, int pairs_count);
 int getFileSize(const char *);

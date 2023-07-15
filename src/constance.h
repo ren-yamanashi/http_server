@@ -14,4 +14,6 @@
 #define ERROR_FLAG -1
 #define SUCCESS_FLAG 0
 #define NUM_OF_CONNECT_KEEP 3
+#define SIZE (5 * 1024)
+
 #endif

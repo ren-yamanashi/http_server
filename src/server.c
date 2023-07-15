@@ -8,10 +8,10 @@
 #include "server.h"
 #include "response.h"
 #include "request.h"
-#include "router.h"
 #include "io.h"
 #include "helper.h"
 #include "constance.h"
+#include "struct.h"
 
 /**
  * 受信した文字列を表示
