@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "helper.h"
+#include "constance.h"
 
 void copyStringSafely(char *destination, char *source, size_t destination_size)
 {
@@ -11,7 +12,7 @@ void copyStringSafely(char *destination, char *source, size_t destination_size)
 
 int isError(int target)
 {
-    if (target == -1)
+    if (target == ERROR_FLAG)
     {
         return 1;
     }

@@ -39,7 +39,7 @@ int processRequest(int sock, HttpRequest *request, HttpResponse *response)
 {
     char request_message[SIZE];
     int request_size = recvRequestMessage(sock, request_message, SIZE);
-    if (request_size == -1)
+    if (isError(request_size))
     {
         printf("Error: Failed to receive request message\n");
         return ERROR_FLAG;
@@ -47,14 +47,14 @@ int processRequest(int sock, HttpRequest *request, HttpResponse *response)
     if (request_size == 0)
     {
         // NOTE: 受信サイズが0の場合は相手が接続を閉じていると判断
-        printf("Error: Connection ended\n");
+        printf("Connection ended\n");
         return ERROR_FLAG;
     }
 
     printf("\nShow Request Message \n\n");
     showMessage(request_message, request_size);
 
-    if (parseRequestMessage(request_message, request) == -1)
+    if (isError(parseRequestMessage(request_message, request)))
     {
         printf("Error: Failed to parse request message\n");
         return ERROR_FLAG;
@@ -73,7 +73,7 @@ void processResponse(int sock, HttpResponse *response)
     char response_message[SIZE];
     char header_field[SIZE];
     int response_size = createResponseMessage(response_message, header_field, response);
-    if (response_size == -1)
+    if (isError(response_size))
     {
         printf("Error: Failed to create response message\n");
         return;

@@ -109,6 +109,8 @@ char *splitRequestHeaderAndBody(char *request_message)
 int parseRequestMessage(char *request_message, HttpRequest *request)
 {
     char *line, *line_save;
+    char request_message_copy[SIZE];
+    snprintf(request_message_copy, sizeof(request_message_copy), "%s", request_message);
 
     // NOTE: ヘッダーとボディを分離
     char *body_start = splitRequestHeaderAndBody(request_message);
@@ -118,7 +120,7 @@ int parseRequestMessage(char *request_message, HttpRequest *request)
     }
 
     // NOTE: リクエストメッセージの1行目を取得
-    line = strtok_r(request_message, "\r\n", &line_save);
+    line = strtok_r(request_message_copy, "\r\n", &line_save);
     if (line == NULL)
     {
         printf("Error: Could not get request\n");
