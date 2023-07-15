@@ -47,11 +47,11 @@ int processRequest(int sock, HttpRequest *request, HttpResponse *response)
     if (request_size == 0)
     {
         // NOTE: 受信サイズが0の場合は相手が接続を閉じていると判断
-        printf("Connection ended\n");
+        printf("Info: Connection ended\n");
         return ERROR_FLAG;
     }
 
-    printf("\nShow Request Message \n\n");
+    printf("\nInfo: Show request message\n\n");
     showMessage(request_message, request_size);
 
     if (isError(parseRequestMessage(request_message, request)))
@@ -78,7 +78,7 @@ void processResponse(int sock, HttpResponse *response)
         printf("Error: Failed to create response message\n");
         return;
     }
-    printf("\nShow Response Message \n\n");
+    printf("\nInfo: Show response message\n\n");
     showMessage(response_message, response_size);
     sendResponseMessage(sock, response_message, response_size);
 }
@@ -120,9 +120,9 @@ int httpServer(int sock, Route *routes, int routes_count)
 
     while (1)
     {
-        if (processRequest(sock, &request, &response) == -1)
+        if (isError(processRequest(sock, &request, &response)))
         {
-            return -1;
+            return 0;
         }
 
         for (int i = 0; i < routes_count; i++)
@@ -147,10 +147,8 @@ int httpServer(int sock, Route *routes, int routes_count)
             setResponseInfo(&routes[matched_route], &response);
             // NOTE: content_typeを格納
             copyStringSafely(response.content_type, routes[matched_route].content_type, sizeof(response.content_type));
-
             // NOTE: request_paramを格納
             extractRequestParams(routes[matched_route].path, &request);
-
             // NOTE: routeで登録したハンドラーを実行
             if (routes[matched_route].handler != NULL)
             {
@@ -169,10 +167,10 @@ int connectHttpServer(Route routes[32], int routes_count)
 
     // NOTE: ソケットを作成
     waiting_sock_addr = socket(AF_INET, SOCK_STREAM, SOCK_DEFAULT_PROTOCOL);
-    if (waiting_sock_addr == -1)
+    if (isError(waiting_sock_addr))
     {
         printf("Error: Failed create socket\n");
-        return -1;
+        return ERROR_FLAG;
     }
 
     // NOTE: 構造体を全て0にセット
@@ -187,44 +185,41 @@ int connectHttpServer(Route routes[32], int routes_count)
     sock_addr_info.sin_addr.s_addr = inet_addr(SERVER_ADDR);
 
     // NOTE: ソケットを特定のネットワークアドレス（IPアドレスとポート番号の組）に紐付ける
-    if (bind(waiting_sock_addr, (const struct sockaddr *)&sock_addr_info, sizeof(sock_addr_info)) == -1)
+    if (isError(bind(waiting_sock_addr, (const struct sockaddr *)&sock_addr_info, sizeof(sock_addr_info))))
     {
         printf("Error: Failed to bind socket with network address\n");
         close(waiting_sock_addr);
-        return -1;
+        return ERROR_FLAG;
     }
 
     // NOTE: ソケットを接続待ちに設定
-    if (listen(waiting_sock_addr, 3) == -1)
+    if (isError(listen(waiting_sock_addr, NUM_OF_CONNECT_KEEP)))
     {
         printf("Error: Could not set socket to listen for connection\n");
         close(waiting_sock_addr);
-        return -1;
+        return ERROR_FLAG;
     }
 
     while (1)
     {
         // NOTE: 接続を受け付ける
-        printf("Waiting connect...\n");
+        printf("Info: Waiting connect...\n");
         connected_sock_addr = accept(waiting_sock_addr, NULL, NULL);
-        if (connected_sock_addr == -1)
+        if (isError(connected_sock_addr))
         {
             printf("Error: Failed to accept connection\n");
             close(waiting_sock_addr);
-            return -1;
+            return ERROR_FLAG;
         }
-        printf("Success Connected!!\n");
-
+        printf("Info: Success connected!!\n");
         // NOTE: 接続済みのソケットでデータのやり取り
         httpServer(connected_sock_addr, routes, routes_count);
-
         // NOTE: ソケット通信をクローズ
         close(connected_sock_addr);
-
         // NOTE: 次の接続要求を受け付ける
     }
     // NOTE: 接続待ちのソケットをクローズ
     close(waiting_sock_addr);
 
-    return 0;
+    return SUCCESS_FLAG;
 }
