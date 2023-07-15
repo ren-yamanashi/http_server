@@ -23,7 +23,7 @@ char *getStatusMessage(int status)
     case HTTP_STATUS_ERROR:
         return HTTP_SERVER_ERROR;
     default:
-        printf("Not support status(%d)\\n", status);
+        printf("Error: Not support status(%d)\\n", status);
         return NULL;
     }
 }
@@ -49,7 +49,7 @@ int createResponseMessage(char *response_message, char *header, HttpResponse *re
     char *status_message = getStatusMessage(response->status);
     if (status_message == NULL)
     {
-        return -1;
+        return ERROR_FLAG;
     }
 
     // NOTE: レスポンス行とヘッダーフィールドの文字列を作成
@@ -62,28 +62,4 @@ int createResponseMessage(char *response_message, char *header, HttpResponse *re
     memcpy(&response_message[no_body_len], response->body, body_len);
 
     return no_body_len + body_len;
-}
-
-/**
- * レスポンスメッセージを送信する
- * @param sock: 接続済みのソケット
- * @param response_message: 送信するレスポンスメッセージへのアドレス
- * @param message_size: 送信するメッセージのサイズ
- * @return 送信したデータサイズ(バイト長)
- */
-int sendResponseMessage(int sock, char *response_message, unsigned int message_size)
-{
-    int send_size;
-
-    /**
-     *  データを送信する
-     *  @param sock 接続済みのソケット
-     *  @param response_message 送信するデータへのポインタ
-     *  @param message_size 送信するデータのサイズ(バイト数)
-     *  @param SEND_FLAG 送信時の動作の詳細設定
-     *  @return 実際に接続先に送信したデータのバイト数
-     */
-    send_size = send(sock, response_message, message_size, SEND_FLAG);
-
-    return send_size;
 }

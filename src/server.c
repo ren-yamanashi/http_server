@@ -80,7 +80,7 @@ void processResponse(int sock, HttpResponse *response)
     }
     printf("\n======Response message======\n\n");
     showMessage(response_message, response_size);
-    sendResponseMessage(sock, response_message, response_size);
+    send(sock, response_message, response_size, SEND_FLAG);
 }
 
 /**
