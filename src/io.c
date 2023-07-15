@@ -12,29 +12,36 @@
  * @param path - ファイルパスを指す文字列
  * @return pathを元に読み込んだファイルのサイズ
  */
-unsigned int getFileSize(const char *path)
+int getFileSize(const char *path)
 {
-    int size, read_size;
+    int size = 0, read_size = 0;
     char read_buf[SIZE];
-    FILE *f;
+    FILE *file;
 
     // NOTE: ファイルを開く
-    f = fopen(path, "rb");
-    if (f == NULL)
+    file = fopen(path, "rb");
+    if (file == NULL)
     {
-        printf("Error opening file: %s, error: %s\n", path, strerror(errno));
-        return 0;
+        printf("Error: opening file: %s, error: %s\n", path, strerror(errno));
+        return ERROR_FLAG;
     }
 
-    size = 0;
+    // NOTE: ファイルから指定した数・サイズのデータを読み込む
     do
     {
-        // NOTE: ファイルから指定した数・サイズのデータを読み込む
-        read_size = fread(read_buf, 1, SIZE, f);
+        read_size = fread(read_buf, 1, SIZE, file);
         size += read_size;
     } while (read_size != 0);
 
-    fclose(f);
+    // NOTE: ファイルを閉じる
+    fclose(file);
+
+    // NOTE: 結果によってエラーを返す
+    if (size == 0)
+    {
+        printf("Error: Failed to read file\n");
+        return ERROR_FLAG;
+    }
 
     return size;
 }
@@ -99,7 +106,7 @@ int readFile(char *body, const char *file_path)
 {
     // NOTE: ファイルサイズを取得
     int file_size = getFileSize(file_path);
-    if (file_size == 0)
+    if (isError(file_size))
     {
         // NOTE: ファイルサイズが0やファイルが存在しない場合は404を返す
         printf("Error get file size: %s\n", file_path);

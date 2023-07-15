@@ -11,7 +11,7 @@ typedef struct
 } KeyValue;
 
 int parseJson(char *json, KeyValue *key_value, int pairs_count);
-unsigned int getFileSize(const char *);
+int getFileSize(const char *);
 int readFile(char *body, const char *file_path);
 void copyStringSafely(char *destination, char *source, size_t destination_size);
 

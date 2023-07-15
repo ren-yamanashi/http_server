@@ -6,6 +6,7 @@
 #include "request.h"
 #include "io.h"
 #include "helper.h"
+#include "constance.h"
 
 /**
  * リクエストメッセージを受信する
@@ -21,7 +22,7 @@ int recvRequestMessage(int sock, char *request_message, unsigned int buf_size)
     if (recv_size < 0)
     {
         perror("Error: Failed to receive request message");
-        return -1;
+        return ERROR_FLAG;
     }
     // NOTE: バッファの現在の終端をNULL文字で終了
     request_message[recv_size] = '\0';
@@ -44,13 +45,13 @@ int parseRequestLine(char *line, HttpRequest *request)
     if (req_method == NULL || req_target == NULL || version == NULL)
     {
         printf("Error: Could not parse the request line\n");
-        return -1;
+        return ERROR_FLAG;
     }
     // NOTE: 1行目の情報を構造体に格納
-    strncpy(request->method, req_method, sizeof(request->method) - 1);
-    strncpy(request->target, req_target, sizeof(request->target) - 1);
-    strncpy(request->version, version, sizeof(request->version) - 1);
-    return 0;
+    copyStringSafely(request->method, req_method, sizeof(request->method));
+    copyStringSafely(request->target, req_target, sizeof(request->target));
+    copyStringSafely(request->version, version, sizeof(request->version));
+    return SUCCESS_FLAG;
 }
 
 /**
