@@ -39,7 +39,7 @@ int processRequest(int sock, HttpRequest *request, HttpResponse *response)
 {
     char request_message[SIZE];
     int request_size = recvRequestMessage(sock, request_message, SIZE);
-    if (isError(request_size))
+    if (request_size == -1)
     {
         printf("Error: Failed to receive request message\n");
         return ERROR_FLAG;
@@ -54,7 +54,7 @@ int processRequest(int sock, HttpRequest *request, HttpResponse *response)
     printf("\nShow Request Message \n\n");
     showMessage(request_message, request_size);
 
-    if (isError(parseRequestMessage(request_message, request)))
+    if (parseRequestMessage(request_message, request) == -1)
     {
         printf("Error: Failed to parse request message\n");
         return ERROR_FLAG;
@@ -73,7 +73,7 @@ void processResponse(int sock, HttpResponse *response)
     char response_message[SIZE];
     char header_field[SIZE];
     int response_size = createResponseMessage(response_message, header_field, response);
-    if (isError(response_size))
+    if (response_size == -1)
     {
         printf("Error: Failed to create response message\n");
         return;
@@ -139,7 +139,7 @@ int httpServer(int sock, Route *routes, int routes_count)
         // NOTE: routeで設定した情報と、リクエスト内容が一致していない場合、content_typeの値が受け入れ不可であれば404を返す
         if (matched_route == -1)
         {
-            response.status = 404;
+            response.status = HTTP_STATUS_NOT_FOUND;
         }
         else
         {
