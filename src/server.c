@@ -11,6 +11,7 @@
 #include "router.h"
 #include "io.h"
 #include "helper.h"
+#include "constance.h"
 
 /**
  * 受信した文字列を表示
@@ -20,12 +21,88 @@
 void showMessage(char *message, unsigned int size)
 {
     unsigned int i;
-
     for (i = 0; i < size; i++)
     {
         putchar(message[i]);
     }
     printf("\r\n");
+}
+
+/**
+ * リクエストに対する処理
+ * @param sock 対象のソケット
+ * @param request HttpRequest構造体のアドレス
+ * @param response HttpResponse構造体のアドレス
+ * @return 成功した場合は0 それ以外は-1
+ */
+int processRequest(int sock, HttpRequest *request, HttpResponse *response)
+{
+    char request_message[SIZE];
+    int request_size = recvRequestMessage(sock, request_message, SIZE);
+    if (isError(request_size))
+    {
+        printf("Error: Failed to receive request message\n");
+        return ERROR_FLAG;
+    }
+    if (request_size == 0)
+    {
+        // NOTE: 受信サイズが0の場合は相手が接続を閉じていると判断
+        printf("Error: Connection ended\n");
+        return ERROR_FLAG;
+    }
+
+    printf("\nShow Request Message \n\n");
+    showMessage(request_message, request_size);
+
+    if (isError(parseRequestMessage(request_message, request)))
+    {
+        printf("Error: Failed to parse request message\n");
+        return ERROR_FLAG;
+    }
+
+    return SUCCESS_FLAG;
+}
+
+/**
+ * レスポンスに対する処理
+ * @param sock 対象のソケット
+ * @param response HttpResponse構造体のアドレス
+ */
+void processResponse(int sock, HttpResponse *response)
+{
+    char response_message[SIZE];
+    char header_field[SIZE];
+    int response_size = createResponseMessage(response_message, header_field, response);
+    if (isError(response_size))
+    {
+        printf("Error: Failed to create response message\n");
+        return;
+    }
+    printf("\nShow Response Message \n\n");
+    showMessage(response_message, response_size);
+    sendResponseMessage(sock, response_message, response_size);
+}
+
+/**
+ * レスポンスの情報を構造体に格納
+ * @param route Route構造体のアドレス
+ * @param response HttpResponse構造体のアドレス
+ */
+void setResponseInfo(Route *route, HttpResponse *response)
+{
+    // NOTE: content_typeが`text/html`の場合は、ファイルを読み込む
+    if (strcmp(route->content_type, "text/html") == 0)
+    {
+        response->status = readFile(response->body, &route->file_path[1]);
+        response->body_size = getFileSize(&route->file_path[1]);
+    }
+    // NOTE: content_typeが`text/plain`の場合は、そのままbodyに格納
+    else
+    {
+        copyStringSafely(response->body, route->message, sizeof(response->body));
+        response->status = HTTP_STATUS_OK;
+        response->body_size = strlen(response->body);
+    }
 }
 
 /**
@@ -37,36 +114,15 @@ void showMessage(char *message, unsigned int size)
  */
 int httpServer(int sock, Route *routes, int routes_count)
 {
-    int request_size, response_size;
     int matched_route = -1;
-    char request_message[SIZE];
-    char response_message[SIZE];
-    char header_field[SIZE];
     HttpRequest request = {0};
     HttpResponse response = {0};
 
     while (1)
     {
-        request_size = recvRequestMessage(sock, request_message, SIZE);
-        if (request_size == -1)
+        if (processRequest(sock, &request, &response) == -1)
         {
-            printf("recvRequestMessage error\n");
-            break;
-        }
-        if (request_size == 0)
-        {
-            // NOTE: 受信サイズが0の場合は相手が接続を閉じていると判断
-            printf("connection ended\n");
-            break;
-        }
-
-        printf("\nShow Request Message \n\n");
-        showMessage(request_message, request_size);
-
-        if (parseRequestMessage(request_message, &request) == -1)
-        {
-            printf("parseRequestMessage error\n");
-            break;
+            return -1;
         }
 
         for (int i = 0; i < routes_count; i++)
@@ -87,20 +143,8 @@ int httpServer(int sock, Route *routes, int routes_count)
         }
         else
         {
-            // NOTE: content_typeが`text/html`の場合は、ファイルを読み込む
-            if (strcmp(routes[matched_route].content_type, "text/html") == 0)
-            {
-                response.status = readFile(response.body, &routes[matched_route].file_path[1]);
-                response.body_size = getFileSize(&routes[matched_route].file_path[1]);
-            }
-            // NOTE: content_typeが`text/plain`の場合は、そのままbodyに格納
-            else
-            {
-                copyStringSafely(response.body, routes[matched_route].message, sizeof(response.body));
-                response.status = 200;
-                response.body_size = strlen(response.body);
-            }
-
+            // NOTE: レスポンスの情報を格納
+            setResponseInfo(&routes[matched_route], &response);
             // NOTE: content_typeを格納
             copyStringSafely(response.content_type, routes[matched_route].content_type, sizeof(response.content_type));
 
@@ -113,42 +157,28 @@ int httpServer(int sock, Route *routes, int routes_count)
                 routes[matched_route].handler(&request, &response);
             }
         }
-
-        response_size = createResponseMessage(response_message, header_field, &response);
-
-        if (response_size == -1)
-        {
-            printf("createResponseMessage error\n");
-            break;
-        }
-
-        // NOTE: 送信するメッセージを表示
-        printf("\nShow Response Message \n\n");
-        showMessage(response_message, response_size);
-
-        // NOTE: レスポンスメッセージを送信する
-        sendResponseMessage(sock, response_message, response_size);
+        processResponse(sock, &response);
     }
     return 0;
 }
 
 int connectHttpServer(Route routes[32], int routes_count)
 {
-    int waiting_sock_addr, connected_sock_addr, DEFAULT_PROTOCOL = 0;
+    int waiting_sock_addr, connected_sock_addr;
     struct sockaddr_in sock_addr_info;
 
     // NOTE: ソケットを作成
-    waiting_sock_addr = socket(AF_INET, SOCK_STREAM, DEFAULT_PROTOCOL);
+    waiting_sock_addr = socket(AF_INET, SOCK_STREAM, SOCK_DEFAULT_PROTOCOL);
     if (waiting_sock_addr == -1)
     {
-        printf("socket error\n");
+        printf("Error: Failed create socket\n");
         return -1;
     }
 
     // NOTE: 構造体を全て0にセット
     memset(&sock_addr_info, 0, sizeof(struct sockaddr_in));
 
-    /** サーバーのIPアドレスとボート番号の情報を設定 */
+    // NOTE:サーバーのアドレスファミリー・IPアドレス・ボート番号の情報を設定
     // NOTE: アドレスファミリーを指定
     sock_addr_info.sin_family = AF_INET;
     // NOTE: 使用するポート番号を指定
@@ -159,7 +189,7 @@ int connectHttpServer(Route routes[32], int routes_count)
     // NOTE: ソケットを特定のネットワークアドレス（IPアドレスとポート番号の組）に紐付ける
     if (bind(waiting_sock_addr, (const struct sockaddr *)&sock_addr_info, sizeof(sock_addr_info)) == -1)
     {
-        printf("bind error\n");
+        printf("Error: Failed to bind socket with network address\n");
         close(waiting_sock_addr);
         return -1;
     }
@@ -167,24 +197,23 @@ int connectHttpServer(Route routes[32], int routes_count)
     // NOTE: ソケットを接続待ちに設定
     if (listen(waiting_sock_addr, 3) == -1)
     {
-        printf("listen error\n");
+        printf("Error: Could not set socket to listen for connection\n");
         close(waiting_sock_addr);
         return -1;
     }
 
     while (1)
     {
-        printf("Waiting connect...\n");
-
         // NOTE: 接続を受け付ける
+        printf("Waiting connect...\n");
         connected_sock_addr = accept(waiting_sock_addr, NULL, NULL);
         if (connected_sock_addr == -1)
         {
-            printf("accept error\n");
+            printf("Error: Failed to accept connection\n");
             close(waiting_sock_addr);
             return -1;
         }
-        printf("Connected!!\n");
+        printf("Success Connected!!\n");
 
         // NOTE: 接続済みのソケットでデータのやり取り
         httpServer(connected_sock_addr, routes, routes_count);

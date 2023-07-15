@@ -4,5 +4,6 @@
 #include <stdio.h>
 
 void copyStringSafely(char *destination, char *source, size_t destination_size);
+int isError(int target);
 
 #endif

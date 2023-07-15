@@ -20,6 +20,8 @@ char *getStatusMessage(int status)
         return HTTP_OK_MESSAGE;
     case HTTP_STATUS_NOT_FOUND:
         return HTTP_NOT_FOUND_MESSAGE;
+    case HTTP_STATUS_ERROR:
+        return HTTP_SERVER_ERROR;
     default:
         printf("Not support status(%d)\\n", status);
         return NULL;
