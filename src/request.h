@@ -24,7 +24,7 @@ int parseRequestMessage(char *input, HttpRequest *request);
 int recvRequestMessage(int, char *, unsigned int);
 int parseRequestBody(HttpRequest *request);
 int isPathAndURLMatch(const char *request_path, const char *route_path);
-int extractRequestParams(const char *route_path, HttpRequest *request);
+void extractRequestParams(const char *route_path, HttpRequest *request);
 void parseRequestHeader(char *line, char *line_save, HttpRequest *request);
 char *splitRequestHeaderAndBody(char *request_message);
 

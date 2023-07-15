@@ -76,7 +76,6 @@ void parseRequestHeader(char *line, char *line_save, HttpRequest *request)
             header_value++;
             copyStringSafely(request->content_type, header_value, sizeof(request->content_type));
         }
-
         // NOTE: 行の取得を繰り返す
         line = strtok_r(NULL, "\r\n", &line_save);
     }
@@ -117,15 +116,15 @@ int parseRequestMessage(char *request_message, HttpRequest *request)
     char *body_start = splitRequestHeaderAndBody(request_message);
     if (body_start == NULL)
     {
-        return -1;
+        printf("Error: Could not get request\n");
+        return ERROR_FLAG;
     }
-
     // NOTE: リクエストメッセージの1行目を取得
     line = strtok_r(request_message_copy, "\r\n", &line_save);
     if (line == NULL)
     {
-        printf("Error: Could not get request\n");
-        return -1;
+        printf("Error: Could not get request line\n");
+        return ERROR_FLAG;
     }
 
     parseRequestLine(line, request);
@@ -146,27 +145,27 @@ int parseRequestBody(HttpRequest *request)
 {
     if (strlen(request->content_type) == 0)
     {
-        return 0;
+        return SUCCESS_FLAG;
     }
     // NOTE: リクエストヘッダのContent-Typeが `text/plain`,`application/json` 以外はエラー
-    if (strcmp(request->content_type, "application/json") != 0 && strcmp(request->content_type, "text/plain") != 0)
+    if (!isMatchStr(request->content_type, "application/json") && !isMatchStr(request->content_type, "text/plain"))
     {
         printf("Error: Failed to parse request header\n");
-        return -1;
+        return ERROR_FLAG;
     }
     // NOTE: リクエストヘッダのContent-Typeが `text/plain` の場合
-    if (strcmp(request->content_type, "text/plain") == 0)
+    if (isMatchStr(request->content_type, "text/plain"))
     {
-        return 0;
+        return SUCCESS_FLAG;
     }
     // NOTE: リクエストヘッダのContent-Typeが `application/json` の場合
     request->parsed_kv_count = parseJson(request->body, request->parsed_kv, sizeof(request->parsed_kv) / sizeof(KeyValue));
     if (request->parsed_kv_count < 0)
     {
         printf("Error: Failed to parse JSON\n");
-        return -1;
+        return ERROR_FLAG;
     }
-    return 0;
+    return SUCCESS_FLAG;
 }
 
 /**
@@ -188,19 +187,17 @@ int isPathAndURLMatch(const char *request_url, const char *route_path)
 
     while (route_token != NULL && request_token != NULL)
     {
-        if (route_token[0] != ':' && strcmp(route_token, request_token) != 0)
+        if (route_token[0] != ':' && !isMatchStr(route_token, request_token))
         {
             return 0;
         }
         route_token = strtok_r(NULL, DELIM, &route_saveptr);
         request_token = strtok_r(NULL, DELIM, &request_saveptr);
     }
-
     if (route_token != NULL || request_token != NULL)
     {
         return 0;
     }
-
     return 1;
 }
 
@@ -208,9 +205,8 @@ int isPathAndURLMatch(const char *request_url, const char *route_path)
  * リクエストURLを解析して、urlパラメータを取得する
  * @param request HttpRequest構造体を示すアドレス
  * @param route_path routeで指定したpathを示すアドレス
- * @return
  */
-int extractRequestParams(const char *route_path, HttpRequest *request)
+void extractRequestParams(const char *route_path, HttpRequest *request)
 {
     char route_copy[1024];
     char request_copy[1024];
@@ -235,5 +231,4 @@ int extractRequestParams(const char *route_path, HttpRequest *request)
         request_token = strtok_r(NULL, DELIM, &request_saveptr);
     }
     request->param_kv_count = param_kv_count;
-    return 0;
 }
