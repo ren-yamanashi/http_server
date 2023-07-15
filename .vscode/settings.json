@@ -26,6 +26,7 @@
         "iterator": "c",
         "memory": "c",
         "unistd.h": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "main.h": "c"
     }
 }

@@ -55,4 +55,7 @@ curl -i http://127.0.0.1:8080/
 
 # POSTリクエスト
 curl -X POST -H "Content-Type: application/json" -d '{"name":"johnDoe"}' http://127.0.0.1:8080/user/
+
+# DELETEリクエスト
+curl -X DELETE http://127.0.0.1:8080/data/2/delete  
 ```
