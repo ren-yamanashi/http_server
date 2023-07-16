@@ -1,0 +1,6 @@
+/dist
+.vscode/
+node_modules
+package.json
+.eslintrc.js
+*.js

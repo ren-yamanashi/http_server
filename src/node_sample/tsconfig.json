@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "target": "ES2018",
+    "esModuleInterop": true,
+    "strict": true,
+    // "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "rootDir": "./",
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "paths": {
+      "*": ["*"],
+      "~/*": ["./*"]
+    },
+    "moduleResolution": "node"
+  }
+}
