@@ -1,2 +1,4 @@
 /target/*
 *.html
+/src/node_sample/node_modules/
+/src/node_sample/dist/

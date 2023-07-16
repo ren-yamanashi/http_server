@@ -1,0 +1,39 @@
+{
+  "name": "node_sample",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "license": "MIT",
+  "volta": {
+    "node": "20.3.0",
+    "yarn": "1.22.11"
+  },
+  "scripts": {
+    "dev": "yarn build && node dist/index.js",
+    "build": "esbuild ./index.ts --bundle --platform=node --outfile=dist/index.js",
+    "build:watch": "esbuild ./index.ts --bundle --platform=node --outfile=dist/index.js --watch=forever & nodemon dist/index.js",
+    "lint": "eslint . --ext ts --ext js"
+  },
+  "devDependencies": {
+    "@types/ffi-napi": "^4.0.7",
+    "@types/node": "^18.14.0",
+    "@typescript-eslint/eslint-plugin": "^5.59.5",
+    "@typescript-eslint/parser": "^5.59.5",
+    "esbuild": "^0.17.15",
+    "eslint": "^7.10.0",
+    "eslint-config-prettier": "^6.12.0",
+    "eslint-plugin-prettier": "^3.1.4",
+    "husky": "^4.3.8",
+    "lint-staged": "^13.2.2",
+    "nodemon": "^2.0.22",
+    "prettier": "^2.8.8",
+    "typescript": "^4.9.5"
+  },
+  "dependencies": {
+    "electron": "^25.3.0",
+    "electron-rebuild": "^3.2.9",
+    "ffi-napi": "^4.0.3",
+    "ref-array-napi": "^1.2.2",
+    "ref-napi": "^3.0.3",
+    "ref-struct-napi": "^1.1.1"
+  }
+}
