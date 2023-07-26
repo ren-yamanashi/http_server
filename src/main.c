@@ -18,7 +18,7 @@ int main(void)
     createRoute(&routes[0], HTTP_METHOD_GET, "/", CONTENT_TYPE_HTML, "/index.html", "", NULL);
     createRoute(&routes[1], HTTP_METHOD_GET, "/user/:id", CONTENT_TYPE_HTML, "/index.html", "", requestHandler);
     createRoute(&routes[2], HTTP_METHOD_GET, "/user/:id/textbook/:textbookId", CONTENT_TYPE_HTML, "/index.html", "", requestHandler);
-    createRoute(&routes[3], HTTP_METHOD_POST, "/test", CONTENT_TYPE_HTML, "/test.html", "", requestHandler);
+    createRoute(&routes[3], HTTP_METHOD_POST, "/test", CONTENT_TYPE_HTML, "/index.html", "", requestHandler);
     createRoute(&routes[4], HTTP_METHOD_POST, "/plain", CONTENT_TYPE_PLAIN, "", "hello world!", requestHandler);
     createRoute(&routes[5], HTTP_METHOD_DELETE, "/data/:id/delete", CONTENT_TYPE_PLAIN, "", "delete data", requestHandler);
 
