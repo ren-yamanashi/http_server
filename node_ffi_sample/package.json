@@ -20,7 +20,7 @@
   "author": "ren-yamanashi <pinokionigg@icloud.com>",
   "license": "MIT",
   "volta": {
-    "node": "18.17.0",
+    "node": "16.13.0",
     "npm": "9.8.1"
   }
 }
