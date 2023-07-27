@@ -1,4 +1,5 @@
-/target/*
+/target/
 *.html
-/src/node_sample/node_modules/
-/src/node_sample/dist/
+node_ffi_sample/node_modules/
+node_ffi_sample/dist/
+node_ffi_sample/lib/target/

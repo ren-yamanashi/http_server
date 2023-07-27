@@ -1,9 +1,12 @@
 .PHONY: runServer libServer
 
 OUT_DIR = target
-SRC_DIR = src
+SRC_DIR = lib
 OBJS = $(addprefix $(OUT_DIR)/lib/, helper.o io.o request.o response.o server.o lib.o)
-LIB = $(OUT_DIR)/lib/libServer.so
+LIB = $(OUT_DIR)/lib/libServer.dylib
+
+default:
+	make libServer
 
 # runServer
 runServer: $(OUT_DIR)/main/a.out

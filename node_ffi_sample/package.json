@@ -1,0 +1,26 @@
+{
+  "name": "ffi-sample",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "npm run build && npm run start",
+    "dev:test": "export DEV_TYPE=TEST && npm run make && npm run start",
+    "start": "node src/index.js",
+    "compile": "npx tsc",
+    "build": "cp ../target/lib/libServer.dylib lib/target/libServer.dylib",
+    "make": "make",
+    "re:install": "rm -rf node_modules rm package-lock.json && npm install"
+  },
+  "dependencies": {
+    "ffi-napi": "^4.0.3",
+    "ref-array-napi": "^1.2.2",
+    "ref-napi": "^3.0.3",
+    "ref-struct-napi": "^1.1.1"
+  },
+  "author": "ren-yamanashi <pinokionigg@icloud.com>",
+  "license": "MIT",
+  "volta": {
+    "node": "18.17.0",
+    "npm": "9.8.1"
+  }
+}

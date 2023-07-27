@@ -1,0 +1,2 @@
+defalt:
+	make -C lib
