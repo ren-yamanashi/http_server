@@ -3,11 +3,9 @@
   "version": "1.0.0",
   "main": "src/index.js",
   "scripts": {
-    "dev": "npm run build && npm run start",
-    "dev:test": "export DEV_TYPE=TEST && npm run make && npm run start",
+    "dev": "npm run make && npm run start",
     "start": "node src/index.js",
     "compile": "npx tsc",
-    "build": "cp ../target/lib/libServer.dylib lib/target/libServer.dylib",
     "make": "make",
     "re:install": "rm -rf node_modules rm package-lock.json && npm install"
   },

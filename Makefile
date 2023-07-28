@@ -4,7 +4,7 @@ OUT_DIR = target
 SRC_DIR = lib
 OBJS = $(addprefix $(OUT_DIR)/lib/, helper.o io.o request.o response.o server.o lib.o)
 LIB = $(OUT_DIR)/lib/libServer.dylib
-
+NODE_FFI = node_ffi_sample
 default:
 	make libServer
 
@@ -26,3 +26,7 @@ $(LIB): $(OBJS)
 $(OUT_DIR)/lib/%.o: $(SRC_DIR)/%.c
 	mkdir -p $(OUT_DIR)/lib
 	gcc -c $< -o $@
+
+# runNodeFFI
+runNodeFFI:
+	cd node_ffi_sample && npm run dev

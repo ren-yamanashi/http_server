@@ -3,27 +3,8 @@ const ref = require("ref-napi");
 const ArrayType = require("ref-array-napi");
 const StructType = require("ref-struct-napi");
 
-/**
- *
- * sample ffi
- *
- */
-if (process.env.DEV_TYPE == "TEST") {
-  const LIBRARY_FILE = "lib/target/binding";
-  const dll = Library(LIBRARY_FILE, {
-    add: ["int", ["int", "int"]],
-  });
-  const ret = dll.add(1, 2);
-  console.log(ret);
-  return;
-}
-
-/**
- *
- * httpServer ffi
- *
- */
 const LIBRARY_FILE = "lib/target/libServer";
+
 const Route = StructType({
   method: "string",
   path: "string",
@@ -32,8 +13,34 @@ const Route = StructType({
   message: "string",
   handler: "pointer",
 });
+
 const RoutePtr = ref.refType(Route);
 const RoutePtrArray = ArrayType(RoutePtr);
+
+const KeyValue = StructType({
+  key: "string",
+  value: "string",
+});
+
+const HttpRequest = StructType({
+  method: ArrayType("char", 32),
+  target: ArrayType("char", 1024),
+  version: ArrayType("char", 32),
+  content_type: ArrayType("char", 128),
+  body: ArrayType("char", 1024),
+  param_kv: ArrayType(KeyValue, 10),
+  param_kv_count: "uint",
+  parsed_kv: ArrayType(KeyValue, 10),
+  parsed_kv_count: "uint",
+});
+
+const HttpResponse = StructType({
+  status: "int",
+  content_type: ArrayType("char", 32),
+  content_length: "int",
+  body_size: "uint",
+  body: ArrayType("char", 1024),
+});
 
 const libServer = Library(LIBRARY_FILE, {
   createRoute: [
@@ -45,12 +52,16 @@ const libServer = Library(LIBRARY_FILE, {
 
 const routes = new Array(2);
 for (let i = 0; i < routes.length; i++) {
-  routes[i] = new Route();
+  routes[i] = new Route().ref();
 }
 
-const requestHandler = Callback("void", [], () => {
-  console.log("Request handler called");
-});
+const requestHandler = Callback(
+  "void",
+  [ref.refType(HttpRequest), ref.refType(HttpResponse)],
+  (req, res) => {
+    console.log(req, res);
+  }
+);
 
 libServer.createRoute(
   routes[0],
@@ -71,5 +82,9 @@ libServer.createRoute(
   requestHandler
 );
 
-const result = libServer.runServer(routes, routes.length);
-console.log(result);
+const res = libServer.runServer(routes, routes.length);
+if (res < 0) {
+  console.log("Failed to connect to the HTTP server. Error code:", res);
+  return 1;
+}
+return 0;

@@ -27,6 +27,8 @@
         "memory": "c",
         "unistd.h": "c",
         "stdlib.h": "c",
-        "main.h": "c"
+        "main.h": "c",
+        "constance.h": "c",
+        "struct.h": "c"
     }
 }
