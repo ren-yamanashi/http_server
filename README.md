@@ -59,3 +59,10 @@ curl -X POST -H "Content-Type: application/json" -d '{"name":"johnDoe"}' http://
 # DELETEリクエスト
 curl -X DELETE http://127.0.0.1:8080/data/2/delete  
 ```
+
+# NodeFFI Sample
+以下のコマンドを実行することで、C言語で作成した関数をNode.js環境で実行できます
+
+```bash
+make runNodeFFI
+```
