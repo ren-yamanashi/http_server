@@ -72,17 +72,18 @@ libServer.createRoute(
   "",
   requestHandler
 );
-libServer.createRoute(
-  routes[1],
-  "GET",
-  "/user/:id",
-  "text/html",
-  "/index.html",
-  "",
-  requestHandler
-);
+// libServer.createRoute(
+//   routes[1],
+//   "GET",
+//   "/user/:id",
+//   "text/html",
+//   "/index.html",
+//   "",
+//   requestHandler
+// );
 
-const res = libServer.runServer(routes, routes.length);
+const res = libServer.runServer(routes[0], routes.length);
+
 if (res < 0) {
   console.log("Failed to connect to the HTTP server. Error code:", res);
   return 1;

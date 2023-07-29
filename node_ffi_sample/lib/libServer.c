@@ -141,6 +141,12 @@ int httpServer(int sock, Route *routes, int routes_count)
 
         for (int i = 0; i < routes_count; i++)
         {
+            if (routes[i].path == NULL || routes[i].method == NULL || routes[i].content_type == NULL)
+            {
+                fprintf(stderr, "Route[%d] is not properly initialized\n", i);
+                continue;
+            }
+
             if (isMatchStr(request.method, routes[i].method) &&
                 isPathAndURLMatch(request.target, routes[i].path) &&
                 (isMatchStr(routes[i].content_type, "text/html") || isMatchStr(routes[i].content_type, "text/plain")))
@@ -149,11 +155,11 @@ int httpServer(int sock, Route *routes, int routes_count)
                 break;
             }
         }
-        printf("LOG3\n");
 
         // NOTE: routeで設定した情報と、リクエスト内容が一致していない場合、content_typeの値が受け入れ不可であれば404を返す
-        if (isError(matched_route))
+        if (matched_route < 0 || matched_route >= routes_count)
         {
+            fprintf(stderr, "Matched route (%d) is out of range\n", matched_route);
             response.status = HTTP_STATUS_NOT_FOUND;
         }
         else
