@@ -29,4 +29,4 @@ $(OUT_DIR)/lib/%.o: $(SRC_DIR)/%.c
 
 # runNodeFFI
 runNodeFFI:
-	cd node_ffi_sample && npm run dev
+	cd node_ffi && npm run dev
