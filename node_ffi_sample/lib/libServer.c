@@ -142,13 +142,14 @@ int httpServer(int sock, Route *routes, int routes_count)
         for (int i = 0; i < routes_count; i++)
         {
             if (isMatchStr(request.method, routes[i].method) &&
-                isPathAndURLMatch(&request.target, routes[i].path) &&
+                isPathAndURLMatch(request.target, routes[i].path) &&
                 (isMatchStr(routes[i].content_type, "text/html") || isMatchStr(routes[i].content_type, "text/plain")))
             {
                 matched_route = i;
                 break;
             }
         }
+        printf("LOG3\n");
 
         // NOTE: routeで設定した情報と、リクエスト内容が一致していない場合、content_typeの値が受け入れ不可であれば404を返す
         if (isError(matched_route))

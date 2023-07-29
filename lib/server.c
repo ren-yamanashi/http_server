@@ -128,7 +128,7 @@ int httpServer(int sock, Route *routes, int routes_count)
         for (int i = 0; i < routes_count; i++)
         {
             if (isMatchStr(request.method, routes[i].method) &&
-                isPathAndURLMatch(&request.target, routes[i].path) &&
+                isPathAndURLMatch(request.target, routes[i].path) &&
                 (isMatchStr(routes[i].content_type, "text/html") || isMatchStr(routes[i].content_type, "text/plain")))
             {
                 matched_route = i;
