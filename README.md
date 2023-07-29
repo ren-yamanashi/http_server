@@ -41,13 +41,13 @@ void requestHandler(const HttpRequest *const request, const HttpResponse *const 
 }
 ```
 
-2. 以下のコマンドで、サーバーを起動させます(ここで、サーバーは待機状態になります。)
+2. サーバーを起動させます(ここで、サーバーは待機状態になります。)
 
 ```bash
 make runServer
 ```
 
-3. 任意のコマンドで、サーバーにリクエストを送ります。以下はその例です
+3. サーバーにリクエストを送ります。以下はその例です
 
 ```bash
 # GETリクエスト
@@ -57,12 +57,21 @@ curl -i http://127.0.0.1:8080/
 curl -X POST -H "Content-Type: application/json" -d '{"name":"johnDoe"}' http://127.0.0.1:8080/user/
 
 # DELETEリクエスト
-curl -X DELETE http://127.0.0.1:8080/data/2/delete  
+curl -X DELETE http://127.0.0.1:8080/data/2/delete
 ```
 
 # NodeFFI Sample
-以下のコマンドを実行することで、C言語で作成した関数をNode.js環境で実行できます
+
+C 言語で作成した関数を Node.js 環境で実行できます
+
+1. サーバーを起動させます(ここで、サーバーは待機状態になります。)
 
 ```bash
 make runNodeFFI
+```
+
+2. サーバーにリクエストを送ります。
+
+```bash
+curl -i http://127.0.0.1:8080/
 ```
