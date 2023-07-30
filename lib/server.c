@@ -184,7 +184,8 @@ int connectHttpServer(Route routes[32], int routes_count)
     // NOTE: 使用するIPアドレスを指定
     sock_addr_info.sin_addr.s_addr = inet_addr(SERVER_ADDR);
 
-    // NOTE: ソケットを特定のネットワークアドレス（IPアドレスとポート番号の組）に紐付ける
+    // NOTE: ソケットを特定のネットワークアドレス（IPアドレスとポート番号の組）に紐付ける 
+    // NOTE* `sock_addr_info`のポインタを`struct sockaddr *`型へキャスト
     if (isError(bind(waiting_sock_addr, (const struct sockaddr *)&sock_addr_info, sizeof(sock_addr_info))))
     {
         printf("Error: Failed to bind socket with network address\n");
