@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <errno.h>
 #include "server.h"
 #include "response.h"
 #include "request.h"
@@ -169,6 +170,8 @@ int connectHttpServer(Route routes[32], int routes_count)
     waiting_sock_addr = socket(AF_INET, SOCK_STREAM, SOCK_DEFAULT_PROTOCOL);
     if (isError(waiting_sock_addr))
     {
+        perror("socket");
+        printf("%d\n", errno);
         printf("Error: Failed create socket\n");
         return ERROR_FLAG;
     }
@@ -184,10 +187,12 @@ int connectHttpServer(Route routes[32], int routes_count)
     // NOTE: 使用するIPアドレスを指定
     sock_addr_info.sin_addr.s_addr = inet_addr(SERVER_ADDR);
 
-    // NOTE: ソケットを特定のネットワークアドレス（IPアドレスとポート番号の組）に紐付ける 
+    // NOTE: ソケットを特定のネットワークアドレス（IPアドレスとポート番号の組）に紐付ける
     // NOTE* `sock_addr_info`のポインタを`struct sockaddr *`型へキャスト
     if (isError(bind(waiting_sock_addr, (const struct sockaddr *)&sock_addr_info, sizeof(sock_addr_info))))
     {
+        perror("bind");
+        printf("%d\n", errno);
         printf("Error: Failed to bind socket with network address\n");
         close(waiting_sock_addr);
         return ERROR_FLAG;
@@ -196,6 +201,8 @@ int connectHttpServer(Route routes[32], int routes_count)
     // NOTE: ソケットを接続待ちに設定
     if (isError(listen(waiting_sock_addr, NUM_OF_CONNECT_KEEP)))
     {
+        perror("listen");
+        printf("%d\n", errno);
         printf("Error: Could not set socket to listen for connection\n");
         close(waiting_sock_addr);
         return ERROR_FLAG;
@@ -205,9 +212,11 @@ int connectHttpServer(Route routes[32], int routes_count)
     {
         // NOTE: 接続を受け付ける
         printf("Info: Waiting connect...\n");
-        connected_sock_addr = accept(waiting_sock_addr, NULL, NULL);
-        if (isError(connected_sock_addr))
+
+        if ((connected_sock_addr = accept(waiting_sock_addr, NULL, NULL)) < 0)
         {
+            perror("accept");
+            printf("%d\n", errno);
             printf("Error: Failed to accept connection\n");
             close(waiting_sock_addr);
             return ERROR_FLAG;
@@ -216,11 +225,20 @@ int connectHttpServer(Route routes[32], int routes_count)
         // NOTE: 接続済みのソケットでデータのやり取り
         httpServer(connected_sock_addr, routes, routes_count);
         // NOTE: ソケット通信をクローズ
-        close(connected_sock_addr);
+        if (isError(close(connected_sock_addr)))
+        {
+            perror("close");
+            printf("%d\n", errno);
+        }
+
         // NOTE: 次の接続要求を受け付ける
     }
     // NOTE: 接続待ちのソケットをクローズ
-    close(waiting_sock_addr);
+    if (isError(close(waiting_sock_addr)))
+    {
+        perror("close");
+        printf("%d\n", errno);
+    }
 
     return SUCCESS_FLAG;
 }

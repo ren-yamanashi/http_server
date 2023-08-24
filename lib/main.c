@@ -13,8 +13,7 @@
 int main(void)
 {
     // NOTE: ルートを定義
-    Route routes[6]; // define an array of Route
-
+    Route routes[6];
     createRoute(&routes[0], HTTP_METHOD_GET, "/", CONTENT_TYPE_HTML, "/index.html", "", NULL);
     createRoute(&routes[1], HTTP_METHOD_GET, "/user/:id", CONTENT_TYPE_HTML, "/index.html", "", requestHandler);
     createRoute(&routes[2], HTTP_METHOD_GET, "/user/:id/textbook/:textbookId", CONTENT_TYPE_HTML, "/index.html", "", requestHandler);

@@ -170,7 +170,6 @@ close(connected_sock_addr);
 ```c
 /**
  *  @param fd ソケットの識別子
- */
 int close(int fd);
 
 close(waiting_sock_addr);

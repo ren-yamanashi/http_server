@@ -16,20 +16,26 @@ int main(void)
      * - レスポンスメッセージ (`Contents-Type`が`text/plain`の場合にのみ指定した文字列が出力されます)
      * - ハンドラー関数 HttpRequest と HttpResponse を受け取って、実行する処理を指定できます。リクエストが正常な場合に、この処理は実行されます
      */
-    Route routes[] = {
-        {"GET", "/", "text/html", "/index.html", "", NULL},
-        {"GET", "/user/:id", "text/html", "/index.html", "", requestHandler},
-        {"GET", "/user/:id/textbook/:textbookId", "text/html", "/index.html", "", requestHandler},
-        {"POST", "/test", "text/html", "/test.html", "", requestHandler},
-        {"POST", "/plain", "text/plain", "", "hello world!", requestHandler},
-    };
+    Route routes[6];
+    createRoute(&routes[0], HTTP_METHOD_GET, "/", CONTENT_TYPE_HTML, "/index.html", "", NULL);
+    createRoute(&routes[1], HTTP_METHOD_GET, "/user/:id", CONTENT_TYPE_HTML, "/index.html", "", requestHandler);
+    createRoute(&routes[2], HTTP_METHOD_GET, "/user/:id/textbook/:textbookId", CONTENT_TYPE_HTML, "/index.html", "", requestHandler);
+    createRoute(&routes[3], HTTP_METHOD_POST, "/test", CONTENT_TYPE_HTML, "/index.html", "", requestHandler);
+    createRoute(&routes[4], HTTP_METHOD_POST, "/plain", CONTENT_TYPE_PLAIN, "", "hello world!", requestHandler);
+    createRoute(&routes[5], HTTP_METHOD_DELETE, "/data/:id/delete", CONTENT_TYPE_PLAIN, "", "delete data", requestHandler);
 
-    int res = connectHttpServer(routes, sizeof(routes) / sizeof(routes[0]));
-    return res;
+    int res = runServer(routes, sizeof(routes) / sizeof(routes[0]));
+    if (res < 0)
+    {
+        fprintf(stderr, "Failed to connect to the HTTP server. Error code: %d\n", res);
+        return 1;
+    }
+    return 0;
 }
 
 void requestHandler(const HttpRequest *const request, const HttpResponse *const response)
 {
+    // この中身は好きに変更する
     for (int i = 0; i < request->parsed_kv_count; i++)
     {
         printf("Request Body: {%s: %s}\n", request->parsed_kv[i].key, request->parsed_kv[i].value);

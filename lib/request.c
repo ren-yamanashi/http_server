@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <errno.h>
 #include "request.h"
 #include "io.h"
 #include "helper.h"
@@ -19,9 +20,11 @@
 int recvRequestMessage(int sock, char *request_message, unsigned int buf_size)
 {
     // NOTE: リクエストを受信
-    int recv_size = recv(sock, request_message, buf_size, RECV_FLAG);
-    if (recv_size < 0)
+    int recv_size;
+    if ((recv_size = recv(sock, request_message, buf_size, RECV_FLAG)) < 0)
     {
+        perror("recv");
+        printf("%d\n", errno);
         perror("Error: Failed to receive request message");
         return ERROR_FLAG;
     }
